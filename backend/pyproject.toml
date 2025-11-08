@@ -1,0 +1,22 @@
+[project]
+name = "trialscribe-backend"
+version = "1.0.0"
+description = "TrialScribe backend API for clinical trial matching"
+requires-python = ">=3.9"
+dependencies = [
+    "flask==3.0.3",
+    "flask-cors==4.0.1",
+    "python-dotenv==1.0.1",
+    "langchain==0.1.20",
+    "langchain-openai==0.1.7",
+    "pydantic==2.9.2",
+    "requests==2.32.3",
+]
+
+[project.optional-dependencies]
+dev = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
