@@ -140,15 +140,15 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ trials }) => {
               >
                 {expandedId === trial.nct_id ? 'Show Less' : 'Show More Details'}
               </button>
-              
-              <a
-                href={trial.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="trial-link"
-              >
-                View on ClinicalTrials.gov →
-              </a>
+            
+            <a
+              href={trial.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="trial-link"
+            >
+              View on ClinicalTrials.gov →
+            </a>
             </div>
           </div>
         ))}

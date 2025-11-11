@@ -47,10 +47,8 @@ def build_query_params(
     # query.cond - Condition/Disease (Strategy 1: Always include if available)
     # Use ONLY the diagnosis, no symptoms or extra terms
     if patient_data.diagnosis:
-        # Clean diagnosis - take first part if comma-separated, remove extra words
+        # Take first part if comma-separated and strip whitespace
         diagnosis_clean = patient_data.diagnosis.split(",")[0].strip()
-        # Remove phrases like "clinical trials for" or "research studies on"
-        diagnosis_clean = _clean_diagnosis(diagnosis_clean)
         if diagnosis_clean:
             params["query.cond"] = diagnosis_clean
     
@@ -62,33 +60,16 @@ def build_query_params(
     
     # query.locn - Location (Always include if present)
     # Use only the most specific location (zip > city > state > country)
-    location_parts = _build_location_query(patient_data)
-    if location_parts:
-        # Since we return only one location component, just use the first one
-        params["query.locn"] = location_parts[0]
+    location = _get_most_specific_location(patient_data)
+    if location:
+        params["query.locn"] = location
     
     # filter.advanced - Phase preference (Always include if set, regardless of strategy)
-    # Phase is a user preference and should be applied from the start
-    # API format: filter.advanced=AREA[Phase]PHASE1 (multiple phases: AREA[Phase]PHASE1+AREA[Phase]PHASE2)
+    # API format: filter.advanced=AREA[Phase](PHASE1 OR PHASE2)
     if patient_data.phase_preference:
-        def convert_phase_format(phase: str) -> str:
-            """Convert phase format from 'Phase X' to 'PHASEX' for API"""
-            phase_upper = phase.upper().strip()
-            # Handle "Phase 1", "Phase 2", etc. -> "PHASE1", "PHASE2"
-            if phase_upper.startswith("PHASE"):
-                number = phase_upper.replace("PHASE", "").replace(" ", "").strip()
-                return f"PHASE{number}"
-            # Handle "Early Phase 1" -> "EARLY_PHASE1"
-            if "EARLY" in phase_upper and "PHASE" in phase_upper:
-                number = phase_upper.replace("EARLY", "").replace("PHASE", "").replace(" ", "").strip()
-                return f"EARLY_PHASE{number}"
-            # Fallback: replace spaces with underscores and uppercase
-            return phase_upper.replace(" ", "_")
-        
-        converted_phases = [convert_phase_format(p) for p in patient_data.phase_preference]
-        # Format: AREA[Phase]PHASE1+AREA[Phase]PHASE2 for multiple phases
-        phase_filters = [f"AREA[Phase]{phase}" for phase in converted_phases]
-        params["filter.advanced"] = "+".join(phase_filters)
+        converted_phases = [_convert_phase_format(p) for p in patient_data.phase_preference]
+        phases_str = " OR ".join(converted_phases)
+        params["filter.advanced"] = f"AREA[Phase]({phases_str})"
     
     # Additional filters (Strategy 2: Only if include_additional_filters is True)
     if include_additional_filters:
@@ -103,99 +84,48 @@ def build_query_params(
     return params
 
 
-def _clean_diagnosis(diagnosis: str) -> str:
-    """
-    Clean diagnosis string - remove irrelevant phrases
-    
-    Args:
-        diagnosis: Raw diagnosis string
-        
-    Returns:
-        Cleaned diagnosis string
-    """
-    # Remove common irrelevant phrases
-    irrelevant_phrases = [
-        "clinical trials for",
-        "research studies on",
-        "trials for",
-        "studies on",
-        "treatment for",
-    ]
-    
-    diagnosis_lower = diagnosis.lower()
-    for phrase in irrelevant_phrases:
-        if phrase in diagnosis_lower:
-            diagnosis = diagnosis.replace(phrase, "").replace("for", "").replace("on", "").strip()
-    
-    # Remove extra whitespace
-    diagnosis = " ".join(diagnosis.split())
-    
-    return diagnosis
+def _convert_phase_format(phase: str) -> str:
+    """Convert phase format from 'Phase X' to 'PHASEX' for API"""
+    phase_upper = phase.upper().strip()
+    if phase_upper.startswith("PHASE"):
+        number = phase_upper.replace("PHASE", "").replace(" ", "").strip()
+        return f"PHASE{number}"
+    if "EARLY" in phase_upper and "PHASE" in phase_upper:
+        number = phase_upper.replace("EARLY", "").replace("PHASE", "").replace(" ", "").strip()
+        return f"EARLY_PHASE{number}"
+    return phase_upper.replace(" ", "_")
 
 
 def _clean_intervention(intervention: str) -> str:
-    """
-    Clean intervention string - extract the actual intervention name
-    
-    Args:
-        intervention: Raw intervention string
-        
-    Returns:
-        Cleaned intervention string
-    """
-    # Remove common prefixes
-    prefixes = [
-        "chemotherapy with",
-        "treatment with",
-        "therapy with",
-        "using",
-    ]
-    
+    """Clean intervention string - remove prefixes and take first part if comma-separated"""
+    prefixes = ["chemotherapy with", "treatment with", "therapy with", "using"]
     intervention_lower = intervention.lower()
     for prefix in prefixes:
         if intervention_lower.startswith(prefix):
             intervention = intervention[len(prefix):].strip()
-    
-    # Take first part if comma-separated
-    intervention = intervention.split(",")[0].strip()
-    
-    return intervention
+            break
+    return intervention.split(",")[0].strip()
 
 
-def _build_location_query(patient_data: PatientData) -> List[str]:
+def _get_most_specific_location(patient_data: PatientData) -> str | None:
     """
-    Build location query from patient data.
+    Get the most specific location from patient data.
     
-    The query.locn parameter searches across multiple fields, but being too specific
-    (e.g., "San Francisco, California, USA") can return no results. We use only the
-    most specific available location component with priority:
-    1. Zip code (most specific)
-    2. City
-    3. State
-    4. Country (least specific)
+    Priority: zip > city > state > country
     
     Args:
         patient_data: PatientData model instance
         
     Returns:
-        List with single location component (most specific available)
+        Most specific location string or None
     """
-    # Priority order: zip > city > state > country
-    # Use only the most specific available location
-    
-    if patient_data.location_zip:
-        return [patient_data.location_zip]
-    
-    if patient_data.location_city:
-        return [patient_data.location_city]
-    
-    if patient_data.location_state:
-        return [patient_data.location_state]
-    
-    if patient_data.location_country:
-        return [patient_data.location_country]
-    
-    return []
+    return (
+        patient_data.location_zip or
+        patient_data.location_city or
+        patient_data.location_state or
+        patient_data.location_country or
+        None
+    )
 
 def find_clinical_trials(patient_data: PatientData) -> List[ClinicalTrial]:
     """
@@ -271,18 +201,10 @@ def _fetch_trials_from_api(params: Dict[str, str]) -> List[ClinicalTrial]:
         ClinicalTrialsAPIError: If API request fails
     """
     try:
-        # Build full URL for logging
+        # Log API call
         full_url = f"{Config.CLINICAL_TRIALS_API_BASE}?{urllib.parse.urlencode(params)}"
-        
-        # Log the complete API call with all parameters
-        logger.info("=" * 80)
-        logger.info("ClinicalTrials.gov API Request:")
-        logger.info(f"URL: {Config.CLINICAL_TRIALS_API_BASE}")
-        logger.info("Query Parameters:")
-        for key, value in sorted(params.items()):
-            logger.info(f"  {key}: {value}")
-        logger.info(f"Full URL: {full_url}")
-        logger.info("=" * 80)
+        logger.info(f"ClinicalTrials.gov API Request: {full_url}")
+        logger.debug(f"Parameters: {dict(sorted(params.items()))}")
         
         response = requests.get(
             Config.CLINICAL_TRIALS_API_BASE,
@@ -296,15 +218,7 @@ def _fetch_trials_from_api(params: Dict[str, str]) -> List[ClinicalTrial]:
         
         logger.debug(f"Received {len(studies)} studies from API")
         
-        trials = []
-        for study in studies:
-            try:
-                trial = _parse_study(study)
-                if trial:
-                    trials.append(trial)
-            except Exception as e:
-                logger.warning(f"Failed to parse study: {str(e)}")
-                continue
+        trials = [t for t in (_parse_study(study) for study in studies) if t]
         
         return trials
         
@@ -319,59 +233,45 @@ def _fetch_trials_from_api(params: Dict[str, str]) -> List[ClinicalTrial]:
         raise ClinicalTrialsAPIError(f"Failed to process API response: {str(e)}") from e
 
 
-def _parse_study(study: Dict) -> ClinicalTrial:
-    """
-    Parse a study from the API response into a ClinicalTrial model
-    
-    Args:
-        study: Study data from API response
+def _parse_study(study: Dict) -> ClinicalTrial | None:
+    """Parse a study from the API response into a ClinicalTrial model"""
+    try:
+        protocol = study.get("protocolSection", {})
+        ident = protocol.get("identificationModule", {})
+        eligibility = protocol.get("eligibilityModule", {})
+        status = protocol.get("statusModule", {})
+        description = protocol.get("descriptionModule", {})
         
-    Returns:
-        ClinicalTrial model instance
-    """
-    protocol_section = study.get("protocolSection", {})
-    identification_module = protocol_section.get("identificationModule", {})
-    eligibility_module = protocol_section.get("eligibilityModule", {})
-    status_module = protocol_section.get("statusModule", {})
-    description_module = protocol_section.get("descriptionModule", {})
-    
-    nct_id = identification_module.get("nctId", "N/A")
-    
-    return ClinicalTrial(
-        nct_id=nct_id,
-        title=identification_module.get("briefTitle", "No title available"),
-        official_title=identification_module.get("officialTitle"),
-        status=status_module.get("overallStatus", "Unknown"),
-        phase=status_module.get("phases", []),
-        conditions=eligibility_module.get("conditions", []),
-        summary=description_module.get("briefSummary"),
-        eligibility_criteria=eligibility_module.get("eligibilityCriteria"),
-        locations=_extract_locations(protocol_section.get("contactsLocationsModule", {})),
-        url=f"https://clinicaltrials.gov/study/{nct_id}"
-    )
+        nct_id = ident.get("nctId", "N/A")
+        
+        return ClinicalTrial(
+            nct_id=nct_id,
+            title=ident.get("briefTitle", "No title available"),
+            official_title=ident.get("officialTitle"),
+            status=status.get("overallStatus", "Unknown"),
+            phase=status.get("phases", []),
+            conditions=eligibility.get("conditions", []),
+            summary=description.get("briefSummary"),
+            eligibility_criteria=eligibility.get("eligibilityCriteria"),
+            locations=_extract_locations(protocol.get("contactsLocationsModule", {})),
+            url=f"https://clinicaltrials.gov/study/{nct_id}"
+        )
+    except Exception as e:
+        logger.warning(f"Failed to parse study: {str(e)}")
+        return None
 
 def _extract_locations(contacts_locations_module: Dict) -> List[str]:
-    """
-    Extract location information from contacts/locations module
-    
-    Args:
-        contacts_locations_module: Location data from API response
-        
-    Returns:
-        List of formatted location strings
-    """
+    """Extract location information from contacts/locations module"""
     locations = []
-    location_list = contacts_locations_module.get("locations", [])
-    
-    for location in location_list[:MAX_LOCATIONS]:
-        location_name = location.get("facility", "")
-        city = location.get("city", "")
-        state = location.get("state", "")
-        country = location.get("country", "")
-        
-        location_str = ", ".join(filter(None, [location_name, city, state, country]))
+    for location in contacts_locations_module.get("locations", [])[:MAX_LOCATIONS]:
+        parts = [
+            location.get("facility", ""),
+            location.get("city", ""),
+            location.get("state", ""),
+            location.get("country", "")
+        ]
+        location_str = ", ".join(filter(None, parts))
         if location_str:
             locations.append(location_str)
-    
     return locations
 
