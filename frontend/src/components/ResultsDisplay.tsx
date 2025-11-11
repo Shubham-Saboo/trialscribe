@@ -19,6 +19,60 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ trials }) => {
     return trials.slice(0, MAX_RESULTS);
   }, [trials]);
 
+  // Convert trials to CSV format
+  const convertToCSV = (trialsToExport: ClinicalTrial[]): string => {
+    const headers = ['NCT ID', 'Title', 'Official Title', 'Status', 'Phase', 'Conditions', 'Summary', 'Locations', 'URL'];
+    const rows = trialsToExport.map(trial => {
+      // Escape quotes and wrap in quotes for fields that may contain commas
+      const escapeCSV = (value: string | null | undefined): string => {
+        if (!value) return '';
+        return `"${String(value).replace(/"/g, '""')}"`;
+      };
+      
+      return [
+        trial.nct_id,
+        escapeCSV(trial.title),
+        escapeCSV(trial.official_title),
+        escapeCSV(trial.status),
+        escapeCSV(trial.phase.join('; ')),
+        escapeCSV(trial.conditions.join('; ')),
+        escapeCSV(trial.summary),
+        escapeCSV(trial.locations.join('; ')), // Join multiple locations with semicolon, wrap in quotes
+        escapeCSV(trial.url)
+      ];
+    });
+    
+    return [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+  };
+
+  // Download trials as CSV
+  const handleDownloadCSV = () => {
+    const csv = convertToCSV(limitedTrials);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `clinical-trials-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Download trials as JSON
+  const handleDownloadJSON = () => {
+    const json = JSON.stringify(limitedTrials, null, 2);
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `clinical-trials-${new Date().toISOString().split('T')[0]}.json`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Calculate pagination
   const totalPages = Math.min(Math.ceil(limitedTrials.length / RESULTS_PER_PAGE), MAX_PAGES);
   const startIndex = (currentPage - 1) * RESULTS_PER_PAGE;
@@ -55,7 +109,19 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ trials }) => {
 
   return (
     <div className="results-container">
-      <h2>Clinical Trial Matches ({totalDisplayed}{trials.length > MAX_RESULTS ? ` of ${trials.length}` : ''})</h2>
+      <div className="results-header">
+        <h2>Clinical Trial Matches ({totalDisplayed}{trials.length > MAX_RESULTS ? ` of ${trials.length}` : ''})</h2>
+        {limitedTrials.length > 0 && (
+          <div className="download-buttons">
+            <button onClick={handleDownloadCSV} className="download-button" title="Download as CSV">
+              📥 CSV
+            </button>
+            <button onClick={handleDownloadJSON} className="download-button" title="Download as JSON">
+              📥 JSON
+            </button>
+          </div>
+        )}
+      </div>
       
       {trials.length > MAX_RESULTS && (
         <p className="results-limit-notice">
@@ -68,7 +134,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ trials }) => {
           <div key={trial.nct_id} className="trial-card">
             <div className="trial-header">
               <h3 className="trial-title">{trial.title}</h3>
-              <span className={`status-badge status-${trial.status.toLowerCase().replace(/\s+/g, '-')}`}>
+              <span className={`status-badge status-${trial.status.toLowerCase().replace(/\s+/g, '-').replace(/_/g, '-')}`}>
                 {trial.status}
               </span>
             </div>

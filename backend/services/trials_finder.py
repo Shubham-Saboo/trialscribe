@@ -64,12 +64,26 @@ def build_query_params(
     if location:
         params["query.locn"] = location
     
-    # filter.advanced - Phase preference (Always include if set, regardless of strategy)
-    # API format: filter.advanced=AREA[Phase](PHASE1 OR PHASE2)
+    # filter.advanced - Phase and Gender preferences (Always include if set, regardless of strategy)
+    # API format: filter.advanced=AREA[Phase](PHASE1 OR PHASE2)+AREA[Sex]FEMALE
+    advanced_filters = []
+    
+    # Phase filter
     if patient_data.phase_preference:
         converted_phases = [_convert_phase_format(p) for p in patient_data.phase_preference]
         phases_str = " OR ".join(converted_phases)
-        params["filter.advanced"] = f"AREA[Phase]({phases_str})"
+        advanced_filters.append(f"AREA[Phase]({phases_str})")
+    
+    # Gender filter
+    if patient_data.gender:
+        gender_upper = patient_data.gender.upper().strip()
+        # Map to API format: Male -> MALE, Female -> FEMALE, Other -> ALL
+        if gender_upper in ["MALE", "FEMALE"]:
+            advanced_filters.append(f"AREA[Sex]{gender_upper}")
+        # Note: "Other" or "ALL" typically means no gender restriction, so we don't add a filter
+    
+    if advanced_filters:
+        params["filter.advanced"] = "+".join(advanced_filters)
     
     # Additional filters (Strategy 2: Only if include_additional_filters is True)
     if include_additional_filters:
@@ -132,7 +146,7 @@ def find_clinical_trials(patient_data: PatientData) -> List[ClinicalTrial]:
     Find matching clinical trials using ClinicalTrials.gov API
     
     Uses a progressive filtering strategy:
-    1. Strategy 1: status filter + condition filter + location + intervention (if set) + phase (if set)
+    1. Strategy 1: status filter + condition filter + location + intervention (if set) + phase (if set) + gender (if set)
     2. Strategy 2: Add additional filters (outcome, sponsor) if results > 50
     
     Args:
@@ -241,6 +255,8 @@ def _parse_study(study: Dict) -> ClinicalTrial | None:
         eligibility = protocol.get("eligibilityModule", {})
         status = protocol.get("statusModule", {})
         description = protocol.get("descriptionModule", {})
+        design = protocol.get("designModule", {})
+        conditions_module = protocol.get("conditionsModule", {})
         
         nct_id = ident.get("nctId", "N/A")
         
@@ -249,8 +265,8 @@ def _parse_study(study: Dict) -> ClinicalTrial | None:
             title=ident.get("briefTitle", "No title available"),
             official_title=ident.get("officialTitle"),
             status=status.get("overallStatus", "Unknown"),
-            phase=status.get("phases", []),
-            conditions=eligibility.get("conditions", []),
+            phase=design.get("phases", []),  # Phases are in designModule, not statusModule
+            conditions=conditions_module.get("conditions", []),  # Conditions are in conditionsModule, not eligibilityModule
             summary=description.get("briefSummary"),
             eligibility_criteria=eligibility.get("eligibilityCriteria"),
             locations=_extract_locations(protocol.get("contactsLocationsModule", {})),

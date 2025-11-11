@@ -12,13 +12,9 @@ Patient: Hi Doctor. I've been experiencing some concerning symptoms over the pas
 
 Doctor: I see. Can you tell me more about these headaches? When did they start?
 
-Patient: They started about three months ago. They're worse in the morning and seem to get better throughout the day. I've also noticed that my vision has been blurry, and I've been feeling nauseous. I've been experiencing fatigue and some memory issues as well.
+Patient: They started about three months ago. They're worse in the morning and seem to get better throughout the day. I've also noticed that my vision has been blurry, and I've been having seizures occasionally.
 
-Doctor: Have you noticed any other symptoms? Any changes in your coordination or balance?
-
-Patient: Yes, actually. I've been feeling a bit unsteady on my feet, and I've had some difficulty with fine motor tasks, like buttoning my shirt. I've also been having seizures occasionally.
-
-Doctor: I understand. Based on your symptoms - persistent morning headaches, vision problems, nausea, coordination issues, fatigue, memory problems, and seizures - I'm concerned about the possibility of glioblastoma, which is a type of brain tumor. We'll need to do some imaging studies to confirm. Specifically, I'd like to order an MRI of your brain.
+Doctor: I understand. Based on your symptoms - persistent morning headaches, vision problems, and seizures - I'm concerned about the possibility of glioblastoma, which is a type of brain tumor. We'll need to do some imaging studies to confirm. Specifically, I'd like to order an MRI of your brain.
 
 Patient: Oh no. That sounds serious. What are the next steps?
 

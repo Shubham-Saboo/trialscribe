@@ -10,6 +10,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [refineLoading, setRefineLoading] = useState(false);
   const [patientData, setPatientData] = useState<PatientData | null>(null);
+  const [originalPatientData, setOriginalPatientData] = useState<PatientData | null>(null);
   const [trials, setTrials] = useState<ClinicalTrial[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,6 +18,7 @@ function App() {
     setLoading(true);
     setError(null);
     setPatientData(null);
+    setOriginalPatientData(null);
     setTrials([]);
 
     try {
@@ -35,6 +37,7 @@ function App() {
 
       const data = await response.json();
       setPatientData(data.patient_data);
+      setOriginalPatientData(data.patient_data); // Store original data for reset
       setTrials(data.trials || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
@@ -104,9 +107,10 @@ function App() {
           <PatientDataDisplay patientData={patientData} />
         )}
 
-        {patientData && (
+        {patientData && originalPatientData && (
           <SearchParametersPanel
             patientData={patientData}
+            originalPatientData={originalPatientData}
             onRefineSearch={handleRefineSearch}
             loading={refineLoading}
           />

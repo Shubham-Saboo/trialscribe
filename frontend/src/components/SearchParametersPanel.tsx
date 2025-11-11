@@ -4,6 +4,7 @@ import { PatientData } from '../types';
 
 interface SearchParametersPanelProps {
   patientData: PatientData;
+  originalPatientData: PatientData;
   onRefineSearch: (updatedData: PatientData) => void;
   loading?: boolean;
 }
@@ -23,8 +24,15 @@ const PHASE_OPTIONS = [
   'Early Phase 1',
 ];
 
+const GENDER_OPTIONS = [
+  { value: null, label: 'All Genders' },
+  { value: 'Male', label: 'Male Only' },
+  { value: 'Female', label: 'Female Only' },
+];
+
 const SearchParametersPanel: React.FC<SearchParametersPanelProps> = ({
   patientData,
+  originalPatientData,
   onRefineSearch,
   loading = false,
 }) => {
@@ -48,6 +56,13 @@ const SearchParametersPanel: React.FC<SearchParametersPanelProps> = ({
     setEditedData({
       ...editedData,
       [field]: value.trim() || null,
+    });
+  };
+
+  const handleDiagnosisChange = (value: string) => {
+    setEditedData({
+      ...editedData,
+      diagnosis: value.trim() || null,
     });
   };
 
@@ -84,13 +99,22 @@ const SearchParametersPanel: React.FC<SearchParametersPanelProps> = ({
     });
   };
 
+  const handleGenderChange = (value: string) => {
+    setEditedData({
+      ...editedData,
+      gender: value || null,
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onRefineSearch(editedData);
   };
 
   const handleReset = () => {
-    setEditedData(patientData);
+    setEditedData(originalPatientData);
+    // Trigger API call with original parameters
+    onRefineSearch(originalPatientData);
   };
 
   // Check if any editable field has changed
@@ -106,15 +130,17 @@ const SearchParametersPanel: React.FC<SearchParametersPanelProps> = ({
     const compare = (a: any, b: any) => normalize(a) === normalize(b);
 
     return (
-      !compare(editedData.intervention, patientData.intervention) ||
-      !compare(editedData.location_city, patientData.location_city) ||
-      !compare(editedData.location_state, patientData.location_state) ||
-      !compare(editedData.location_country, patientData.location_country) ||
-      !compare(editedData.location_zip, patientData.location_zip) ||
-      !compare(editedData.status_preference, patientData.status_preference) ||
-      !compare(editedData.phase_preference, patientData.phase_preference)
+      !compare(editedData.diagnosis, originalPatientData.diagnosis) ||
+      !compare(editedData.intervention, originalPatientData.intervention) ||
+      !compare(editedData.location_city, originalPatientData.location_city) ||
+      !compare(editedData.location_state, originalPatientData.location_state) ||
+      !compare(editedData.location_country, originalPatientData.location_country) ||
+      !compare(editedData.location_zip, originalPatientData.location_zip) ||
+      !compare(editedData.status_preference, originalPatientData.status_preference) ||
+      !compare(editedData.phase_preference, originalPatientData.phase_preference) ||
+      !compare(editedData.gender, originalPatientData.gender)
     );
-  }, [editedData, patientData]);
+  }, [editedData, originalPatientData]);
 
   return (
     <div className="search-parameters-panel">
@@ -129,20 +155,17 @@ const SearchParametersPanel: React.FC<SearchParametersPanelProps> = ({
       {isExpanded && (
         <form className="parameters-form" onSubmit={handleSubmit}>
           <div className="parameters-grid">
-            {/* Diagnosis - Read Only */}
+            {/* Diagnosis - Editable */}
             <div className="parameter-group">
-              <label className="parameter-label read-only">
+              <label className="parameter-label">
                 Condition/Diagnosis
-                <span className="info-icon" title="Extracted from transcript and cannot be changed">
-                  ℹ️
-                </span>
               </label>
               <input
                 type="text"
                 value={editedData.diagnosis || ''}
-                readOnly
-                className="parameter-input read-only"
-                placeholder="No diagnosis specified"
+                onChange={(e) => handleDiagnosisChange(e.target.value)}
+                className="parameter-input"
+                placeholder="e.g., glioblastoma, lung cancer"
               />
             </div>
 
@@ -232,6 +255,25 @@ const SearchParametersPanel: React.FC<SearchParametersPanelProps> = ({
                   Selected: {editedData.phase_preference.join(', ')}
                 </p>
               )}
+            </div>
+
+            {/* Gender Preference - Editable */}
+            <div className="parameter-group">
+              <label className="parameter-label">Gender (Optional)</label>
+              <select
+                value={editedData.gender || ''}
+                onChange={(e) => handleGenderChange(e.target.value)}
+                className="parameter-select"
+              >
+                {GENDER_OPTIONS.map((option) => (
+                  <option key={option.value || 'all'} value={option.value || ''}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <p className="parameter-hint">
+                Filter trials by gender eligibility requirements
+              </p>
             </div>
           </div>
 
