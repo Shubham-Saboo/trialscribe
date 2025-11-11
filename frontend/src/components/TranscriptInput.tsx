@@ -8,25 +8,25 @@ interface TranscriptInputProps {
 
 const SAMPLE_TRANSCRIPT = `Doctor: Good morning, Sarah. How are you feeling today?
 
-Patient: Hi Doctor. I've been experiencing some concerning symptoms over the past few months. I'm a 45-year-old woman, and I've been having persistent headaches, especially in the morning, along with some vision problems.
+Patient: Hi Doctor. I've been experiencing some concerning symptoms over the past few months. I'm a 45-year-old woman living in San Francisco, California, and I've been having persistent headaches, especially in the morning, along with some vision problems.
 
 Doctor: I see. Can you tell me more about these headaches? When did they start?
 
-Patient: They started about three months ago. They're worse in the morning and seem to get better throughout the day. I've also noticed that my vision has been blurry, and I've been feeling nauseous.
+Patient: They started about three months ago. They're worse in the morning and seem to get better throughout the day. I've also noticed that my vision has been blurry, and I've been feeling nauseous. I've been experiencing fatigue and some memory issues as well.
 
 Doctor: Have you noticed any other symptoms? Any changes in your coordination or balance?
 
-Patient: Yes, actually. I've been feeling a bit unsteady on my feet, and I've had some difficulty with fine motor tasks, like buttoning my shirt.
+Patient: Yes, actually. I've been feeling a bit unsteady on my feet, and I've had some difficulty with fine motor tasks, like buttoning my shirt. I've also been having seizures occasionally.
 
-Doctor: I understand. Based on your symptoms - persistent morning headaches, vision problems, nausea, and coordination issues - I'm concerned about the possibility of a brain tumor. We'll need to do some imaging studies to confirm. Specifically, I'd like to order an MRI of your brain.
+Doctor: I understand. Based on your symptoms - persistent morning headaches, vision problems, nausea, coordination issues, fatigue, memory problems, and seizures - I'm concerned about the possibility of glioblastoma, which is a type of brain tumor. We'll need to do some imaging studies to confirm. Specifically, I'd like to order an MRI of your brain.
 
 Patient: Oh no. That sounds serious. What are the next steps?
 
-Doctor: Yes, this is something we need to investigate promptly. The MRI will help us see what's going on. Depending on the results, we may need to discuss treatment options, which could include surgery, radiation therapy, or chemotherapy. There are also clinical trials available for certain types of brain tumors that might be relevant.
+Doctor: Yes, this is something we need to investigate promptly. The MRI will help us see what's going on. Depending on the results, we may need to discuss treatment options. For glioblastoma, we typically consider surgical resection followed by radiation therapy and chemotherapy. Specifically, we might use temozolomide as the chemotherapy agent. There are also clinical trials available for glioblastoma that might be relevant, especially those involving immunotherapy or targeted therapy.
 
-Patient: I'm willing to do whatever it takes. I have two children, and I want to be there for them.
+Patient: I'm willing to do whatever it takes. I have two children, and I want to be there for them. I'm open to exploring clinical trials, especially if they're available here in the Bay Area or nearby.
 
-Doctor: I understand. Let's start with the MRI, and then we'll discuss the best treatment plan based on the results. I'll also make sure you're aware of any relevant clinical trials that might be available for your specific condition.
+Doctor: I understand. Let's start with the MRI, and then we'll discuss the best treatment plan based on the results. I'll also make sure you're aware of any relevant clinical trials that might be available for your specific condition. Since you're in San Francisco, there are several major medical centers nearby that participate in glioblastoma clinical trials.
 
 Patient: Thank you, Doctor. I appreciate your help.`;
 

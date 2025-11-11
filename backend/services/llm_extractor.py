@@ -1,83 +1,124 @@
 """
-LLM-based patient data extraction service using LangChain
+LLM-based patient data extraction service using LangChain v1.0
+Simple, reliable pipeline: Extract → Validate → Return Pydantic model
 """
-import os
-from typing import Dict, Optional
-from langchain_openai import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
-from langchain.output_parsers import PydanticOutputParser
-from pydantic import BaseModel, Field
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import JsonOutputParser
+from services.models import PatientData
+from services.llm_client import create_llm_client
+from services.exceptions import PatientDataExtractionError
+from services.logger import get_logger
 
-class PatientData(BaseModel):
-    """Structured patient data extracted from transcript"""
-    diagnosis: str = Field(description="Primary diagnosis or condition mentioned")
-    age: Optional[int] = Field(description="Patient age if mentioned, otherwise None")
-    gender: Optional[str] = Field(description="Patient gender if mentioned (Male/Female/Other), otherwise None")
-    symptoms: list[str] = Field(description="List of symptoms mentioned")
-    medical_history: list[str] = Field(description="Relevant medical history items")
-    current_medications: list[str] = Field(description="Current medications if mentioned")
-    treatment_plan: Optional[str] = Field(description="Treatment plan or recommendations if mentioned")
-    exclusion_criteria: list[str] = Field(description="Any conditions or factors that would exclude patient from trials")
+logger = get_logger("llm_extractor")
 
-def extract_patient_data(transcript: str) -> Optional[Dict]:
+# System prompt for patient data extraction
+EXTRACTION_SYSTEM_PROMPT = """You are a medical information extraction assistant. 
+Extract structured information from patient-doctor conversation transcripts.
+
+CRITICAL RULES:
+1. Extract ONLY information explicitly mentioned in the conversation
+2. If a field is NOT mentioned, set it to null
+3. Return valid JSON matching the PatientData schema
+
+Fields to extract:
+- diagnosis: Disease/condition name (e.g., "glioblastoma", "Type 2 Diabetes")
+- intervention: Treatment/medication/therapy (e.g., "temozolomide", "immunotherapy")
+- location_city, location_state, location_country, location_zip: Patient location
+- age: Numeric age (integer or null)
+- gender: "Male", "Female", "Other", or null
+- symptoms: Array of symptom strings (empty array if none)
+- medical_history: Array of medical history items (empty array if none)
+- current_medications: Array of medications (empty array if none)
+- treatment_plan: Treatment plan string or null
+- exclusion_criteria: Array of exclusion factors (empty array if none)
+- outcome: Desired outcome string or null
+- sponsor: Sponsor organization string or null
+- phase_preference: Array of phase strings or null (e.g., ["Phase 1", "Phase 2"])
+- status_preference: Status string or null (e.g., "RECRUITING")
+- search_term: General search term string or null
+
+Return ONLY valid JSON, no markdown, no explanations."""
+
+
+def extract_patient_data(transcript: str) -> PatientData:
     """
-    Extract structured patient data from transcript using LLM
+    Extract structured patient data from transcript using LangChain.
+    
+    Simple pipeline:
+    1. LLM extracts data as JSON
+    2. Parse JSON to dict
+    3. Validate and convert to PatientData Pydantic model
+    4. Return PatientData instance
     
     Args:
         transcript: Patient-doctor conversation transcript
         
     Returns:
-        Dictionary containing extracted patient data
-    """
-    try:
-        # Initialize LLM
-        llm = ChatOpenAI(
-            model="gpt-4o-mini",
-            temperature=0,
-            api_key=os.getenv("OPENAI_API_KEY")
-        )
+        PatientData Pydantic model instance
         
-        # Create output parser
-        parser = PydanticOutputParser(pydantic_object=PatientData)
+    Raises:
+        PatientDataExtractionError: If extraction fails
+        ValueError: If transcript is empty
+    """
+    if not transcript or not transcript.strip():
+        raise ValueError("Transcript cannot be empty")
+    
+    try:
+        logger.info(f"Starting patient data extraction from transcript ({len(transcript)} chars)")
+        
+        # Create LLM client
+        llm = create_llm_client()
         
         # Create prompt template
         prompt = ChatPromptTemplate.from_messages([
-            ("system", """You are a medical information extraction assistant. 
-            Analyze the following patient-doctor conversation transcript and extract 
-            relevant structured information about the patient's condition, demographics, 
-            and medical history. Be thorough but only extract information that is explicitly 
-            mentioned or clearly implied in the conversation.
-            
-            {format_instructions}"""),
-            ("user", "Transcript:\n{transcript}")
+            ("system", EXTRACTION_SYSTEM_PROMPT),
+            ("user", "Extract patient information from this transcript and return as JSON:\n\n{transcript}")
         ])
         
-        # Format prompt
-        formatted_prompt = prompt.format_messages(
-            format_instructions=parser.get_format_instructions(),
-            transcript=transcript
+        # Use JsonOutputParser for reliable JSON parsing
+        json_parser = JsonOutputParser(pydantic_object=PatientData)
+        
+        # Create chain: prompt -> llm -> json_parser
+        chain = prompt | llm | json_parser
+        
+        # Invoke chain - returns dict
+        logger.debug("Invoking LLM chain")
+        extracted_dict = chain.invoke({"transcript": transcript})
+        
+        logger.info(f"Extracted dict with keys: {list(extracted_dict.keys()) if isinstance(extracted_dict, dict) else 'not a dict'}")
+        
+        # Validate and convert to PatientData
+        if not isinstance(extracted_dict, dict):
+            raise PatientDataExtractionError(f"Expected dict, got {type(extracted_dict)}")
+        
+        if not extracted_dict:
+            raise PatientDataExtractionError("LLM returned empty extraction result")
+        
+        # Check if it's a schema (shouldn't happen with JsonOutputParser)
+        if 'properties' in extracted_dict and 'type' in extracted_dict:
+            raise PatientDataExtractionError("LLM returned JSON schema instead of patient data")
+        
+        # Convert to Pydantic model
+        try:
+            patient_data = PatientData.model_validate(extracted_dict)
+        except Exception as e:
+            logger.error(f"Validation error: {str(e)}")
+            logger.error(f"Extracted dict: {extracted_dict}")
+            raise PatientDataExtractionError(f"Failed to validate PatientData: {str(e)}")
+        
+        logger.info(
+            f"Successfully extracted: diagnosis={patient_data.diagnosis}, "
+            f"intervention={patient_data.intervention}, age={patient_data.age}, "
+            f"gender={patient_data.gender}, location={patient_data.location_city or patient_data.location_state}"
         )
         
-        # Get response from LLM
-        response = llm.invoke(formatted_prompt)
+        return patient_data
         
-        # Parse response
-        patient_data = parser.parse(response.content)
-        
-        # Convert to dictionary
-        return patient_data.model_dump()
-        
+    except ValueError as e:
+        logger.error(f"Validation error: {str(e)}")
+        raise
+    except PatientDataExtractionError:
+        raise
     except Exception as e:
-        print(f"Error extracting patient data: {str(e)}")
-        # Fallback: return basic structure if LLM fails
-        return {
-            "diagnosis": "Unknown",
-            "age": None,
-            "gender": None,
-            "symptoms": [],
-            "medical_history": [],
-            "current_medications": [],
-            "treatment_plan": None,
-            "exclusion_criteria": []
-        }
-
+        logger.error(f"Error extracting patient data: {str(e)}", exc_info=True)
+        raise PatientDataExtractionError(f"Failed to extract patient data: {str(e)}") from e
