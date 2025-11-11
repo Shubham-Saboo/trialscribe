@@ -3,7 +3,7 @@ ClinicalTrials.gov API integration service using Pydantic models
 """
 import requests
 import urllib.parse
-from typing import Dict, List, Set
+from typing import Dict, List
 from services.models import PatientData, ClinicalTrial
 from config import Config
 from services.exceptions import ClinicalTrialsAPIError
@@ -237,7 +237,6 @@ def find_clinical_trials(patient_data: PatientData) -> List[ClinicalTrial]:
     )
     
     trials: List[ClinicalTrial] = []
-    existing_ids: Set[str] = set()
     
     try:
         # Strategy 1: status filter + condition filter + location (if available)
@@ -247,7 +246,6 @@ def find_clinical_trials(patient_data: PatientData) -> List[ClinicalTrial]:
             include_additional_filters=False
         )
         trials = _fetch_trials_from_api(params)
-        existing_ids = {t.nct_id for t in trials}
         
         logger.info(f"Strategy 1: Found {len(trials)} trials (status + condition + location)")
         
@@ -260,7 +258,6 @@ def find_clinical_trials(patient_data: PatientData) -> List[ClinicalTrial]:
                 include_additional_filters=False
             )
             trials = _fetch_trials_from_api(params)
-            existing_ids = {t.nct_id for t in trials}
             logger.info(f"Strategy 2: Found {len(trials)} trials (added intervention)")
         
         # Strategy 3: If still > 50, add additional filters (phase, outcome, sponsor)
@@ -272,13 +269,10 @@ def find_clinical_trials(patient_data: PatientData) -> List[ClinicalTrial]:
                 include_additional_filters=True
             )
             trials = _fetch_trials_from_api(params)
-            existing_ids = {t.nct_id for t in trials}
             logger.info(f"Strategy 3: Found {len(trials)} trials (added additional filters)")
         
-        # Limit to max results
-        result = trials[:Config.CLINICAL_TRIALS_MAX_RESULTS]
-        logger.info(f"Returning {len(result)} clinical trials (limited from {len(trials)})")
-        return result
+        logger.info(f"Returning {len(trials)} clinical trials")
+        return trials
         
     except ClinicalTrialsAPIError:
         # Re-raise API errors
@@ -287,32 +281,6 @@ def find_clinical_trials(patient_data: PatientData) -> List[ClinicalTrial]:
         logger.error(f"Unexpected error finding clinical trials: {str(e)}", exc_info=True)
         raise ClinicalTrialsAPIError(f"Failed to find clinical trials: {str(e)}") from e
 
-
-def _merge_trials(
-    existing_trials: List[ClinicalTrial],
-    new_trials: List[ClinicalTrial],
-    existing_ids: Set[str]
-) -> List[ClinicalTrial]:
-    """
-    Merge new trials into existing list, avoiding duplicates
-    
-    Args:
-        existing_trials: Current list of trials
-        new_trials: New trials to add
-        existing_ids: Set of existing trial IDs
-        
-    Returns:
-        Merged list of trials
-    """
-    result = existing_trials.copy()
-    max_results = Config.CLINICAL_TRIALS_MAX_RESULTS
-    
-    for trial in new_trials:
-        if trial.nct_id not in existing_ids and len(result) < max_results:
-            result.append(trial)
-            existing_ids.add(trial.nct_id)
-    
-    return result
 
 def _fetch_trials_from_api(params: Dict[str, str]) -> List[ClinicalTrial]:
     """
@@ -354,7 +322,7 @@ def _fetch_trials_from_api(params: Dict[str, str]) -> List[ClinicalTrial]:
         logger.debug(f"Received {len(studies)} studies from API")
         
         trials = []
-        for study in studies[:Config.CLINICAL_TRIALS_MAX_RESULTS]:
+        for study in studies:
             try:
                 trial = _parse_study(study)
                 if trial:

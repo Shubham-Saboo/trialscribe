@@ -106,19 +106,6 @@ class PatientData(BaseModel):
     )
 
 
-class ClinicalTrialLocation(BaseModel):
-    """Location information for a clinical trial"""
-    facility: Optional[str] = Field(default=None, description="Facility name")
-    city: Optional[str] = Field(default=None, description="City name")
-    state: Optional[str] = Field(default=None, description="State or province")
-    country: Optional[str] = Field(default=None, description="Country name")
-    
-    def __str__(self) -> str:
-        """Format location as a string"""
-        parts = [self.facility, self.city, self.state, self.country]
-        return ", ".join(filter(None, parts))
-
-
 class ClinicalTrial(BaseModel):
     """Clinical trial information"""
     nct_id: str = Field(description="NCT ID (National Clinical Trial identifier)")

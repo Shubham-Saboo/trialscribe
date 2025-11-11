@@ -24,8 +24,6 @@ class Config:
     # Clinical Trials API Configuration
     CLINICAL_TRIALS_API_BASE: str = "https://clinicaltrials.gov/api/v2/studies"
     CLINICAL_TRIALS_TIMEOUT: int = int(os.getenv("CLINICAL_TRIALS_TIMEOUT", "10"))
-    CLINICAL_TRIALS_MAX_RESULTS: int = int(os.getenv("CLINICAL_TRIALS_MAX_RESULTS", "10"))
-    CLINICAL_TRIALS_MIN_RESULTS: int = int(os.getenv("CLINICAL_TRIALS_MIN_RESULTS", "5"))
     
     # Search Configuration
     MAX_QUERY_TERMS: int = 5

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import './ResultsDisplay.css';
 import { ClinicalTrial } from '../types';
 
@@ -6,11 +6,38 @@ interface ResultsDisplayProps {
   trials: ClinicalTrial[];
 }
 
+const RESULTS_PER_PAGE = 5;
+const MAX_PAGES = 10;
+const MAX_RESULTS = RESULTS_PER_PAGE * MAX_PAGES; // 50
+
 const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ trials }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Limit trials to max 50 (10 pages × 5 per page)
+  const limitedTrials = useMemo(() => {
+    return trials.slice(0, MAX_RESULTS);
+  }, [trials]);
+
+  // Calculate pagination
+  const totalPages = Math.min(Math.ceil(limitedTrials.length / RESULTS_PER_PAGE), MAX_PAGES);
+  const startIndex = (currentPage - 1) * RESULTS_PER_PAGE;
+  const endIndex = startIndex + RESULTS_PER_PAGE;
+  const paginatedTrials = limitedTrials.slice(startIndex, endIndex);
+
+  // Reset to page 1 when trials change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [trials]);
 
   const toggleExpand = (nctId: string) => {
     setExpandedId(expandedId === nctId ? null : nctId);
+  };
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    setExpandedId(null); // Collapse expanded items when changing pages
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (trials.length === 0) {
@@ -22,11 +49,22 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ trials }) => {
     );
   }
 
+  const totalDisplayed = limitedTrials.length;
+  const showingFrom = startIndex + 1;
+  const showingTo = Math.min(endIndex, totalDisplayed);
+
   return (
     <div className="results-container">
-      <h2>Clinical Trial Matches ({trials.length})</h2>
+      <h2>Clinical Trial Matches ({totalDisplayed}{trials.length > MAX_RESULTS ? ` of ${trials.length}` : ''})</h2>
+      
+      {trials.length > MAX_RESULTS && (
+        <p className="results-limit-notice">
+          Showing first {MAX_RESULTS} results (maximum {MAX_PAGES} pages)
+        </p>
+      )}
+
       <div className="trials-list">
-        {trials.map((trial) => (
+        {paginatedTrials.map((trial) => (
           <div key={trial.nct_id} className="trial-card">
             <div className="trial-header">
               <h3 className="trial-title">{trial.title}</h3>
@@ -58,13 +96,6 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ trials }) => {
                 <p>{trial.summary.substring(0, 200)}...</p>
               </div>
             )}
-            
-            <button
-              className="expand-button"
-              onClick={() => toggleExpand(trial.nct_id)}
-            >
-              {expandedId === trial.nct_id ? 'Show Less' : 'Show More Details'}
-            </button>
             
             {expandedId === trial.nct_id && (
               <div className="trial-details">
@@ -102,17 +133,82 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ trials }) => {
               </div>
             )}
             
-            <a
-              href={trial.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="trial-link"
-            >
-              View on ClinicalTrials.gov →
-            </a>
+            <div className="trial-footer">
+              <button
+                className="expand-button"
+                onClick={() => toggleExpand(trial.nct_id)}
+              >
+                {expandedId === trial.nct_id ? 'Show Less' : 'Show More Details'}
+              </button>
+              
+              <a
+                href={trial.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="trial-link"
+              >
+                View on ClinicalTrials.gov →
+              </a>
+            </div>
           </div>
         ))}
       </div>
+
+      {totalPages > 1 && (
+        <div className="pagination">
+          <div className="pagination-info">
+            Showing {showingFrom}-{showingTo} of {totalDisplayed} results
+          </div>
+          
+          <div className="pagination-controls">
+            <button
+              className="pagination-button"
+              onClick={() => goToPage(1)}
+              disabled={currentPage === 1}
+              aria-label="First page"
+            >
+              ««
+            </button>
+            <button
+              className="pagination-button"
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              aria-label="Previous page"
+            >
+              ‹
+            </button>
+            
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                className={`pagination-button ${currentPage === page ? 'active' : ''}`}
+                onClick={() => goToPage(page)}
+                aria-label={`Page ${page}`}
+                aria-current={currentPage === page ? 'page' : undefined}
+              >
+                {page}
+              </button>
+            ))}
+            
+            <button
+              className="pagination-button"
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              aria-label="Next page"
+            >
+              ›
+            </button>
+            <button
+              className="pagination-button"
+              onClick={() => goToPage(totalPages)}
+              disabled={currentPage === totalPages}
+              aria-label="Last page"
+            >
+              »»
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

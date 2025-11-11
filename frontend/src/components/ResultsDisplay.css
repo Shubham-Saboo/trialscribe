@@ -130,6 +130,15 @@
   line-height: 1.6;
 }
 
+.trial-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+}
+
 .expand-button {
   background: none;
   border: none;
@@ -138,7 +147,6 @@
   font-size: 0.95rem;
   font-weight: 600;
   padding: 0.5rem 0;
-  margin-bottom: 1rem;
   transition: color 0.2s;
 }
 
@@ -203,13 +211,86 @@
   color: #667eea;
   text-decoration: none;
   font-weight: 600;
-  margin-top: 1rem;
   transition: color 0.2s;
+  white-space: nowrap;
 }
 
 .trial-link:hover {
   color: #5568d3;
   text-decoration: underline;
+}
+
+.results-limit-notice {
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  color: #856404;
+  font-size: 0.9rem;
+}
+
+.pagination {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pagination-info {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.pagination-controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.pagination-button {
+  min-width: 40px;
+  height: 40px;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #e0e0e0;
+  background-color: white;
+  color: #333;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-button:hover:not(:disabled) {
+  border-color: #667eea;
+  background-color: #f0f4ff;
+  color: #667eea;
+}
+
+.pagination-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination-button.active {
+  background-color: #667eea;
+  border-color: #667eea;
+  color: white;
+  font-weight: 600;
+}
+
+.pagination-button.active:hover {
+  background-color: #5568d3;
+  border-color: #5568d3;
 }
 
 @media (max-width: 768px) {
@@ -220,6 +301,27 @@
   .trial-meta {
     flex-direction: column;
     gap: 0.5rem;
+  }
+
+  .trial-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .trial-link {
+    align-self: flex-end;
+  }
+
+  .pagination-controls {
+    gap: 0.25rem;
+  }
+
+  .pagination-button {
+    min-width: 36px;
+    height: 36px;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.85rem;
   }
 }
 
