@@ -44,7 +44,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ trials }) => {
     return (
       <div className="results-container">
         <h2>Clinical Trial Matches</h2>
-        <p className="no-results">No matching clinical trials found.</p>
+        <p className="no-results">No trials found. Please adjust your filtering criteria.</p>
       </div>
     );
   }

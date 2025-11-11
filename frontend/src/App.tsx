@@ -3,10 +3,12 @@ import './App.css';
 import TranscriptInput from './components/TranscriptInput';
 import ResultsDisplay from './components/ResultsDisplay';
 import PatientDataDisplay from './components/PatientDataDisplay';
+import SearchParametersPanel from './components/SearchParametersPanel';
 import { PatientData, ClinicalTrial } from './types';
 
 function App() {
   const [loading, setLoading] = useState(false);
+  const [refineLoading, setRefineLoading] = useState(false);
   const [patientData, setPatientData] = useState<PatientData | null>(null);
   const [trials, setTrials] = useState<ClinicalTrial[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +43,47 @@ function App() {
     }
   };
 
+  const handleRefineSearch = async (updatedPatientData: PatientData) => {
+    setRefineLoading(true);
+    setError(null);
+
+    try {
+      // Log the API call to console
+      console.log('Refine Search API Call:', {
+        url: '/api/search-trials',
+        diagnosis: updatedPatientData.diagnosis,
+        intervention: updatedPatientData.intervention,
+        location: updatedPatientData.location_city || updatedPatientData.location_state || updatedPatientData.location_country,
+        status: updatedPatientData.status_preference,
+        phase: updatedPatientData.phase_preference,
+      });
+
+      const response = await fetch('/api/search-trials', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ patient_data: updatedPatientData }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || 'Failed to refine search');
+      }
+
+      const data = await response.json();
+      console.log('Refine Search Success - Trials Found:', data.trials?.length || 0);
+      
+      setTrials(data.trials || []);
+      setPatientData(updatedPatientData); // Update patient data with edited values
+    } catch (err) {
+      console.error('Refine Search Error:', err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+    } finally {
+      setRefineLoading(false);
+    }
+  };
+
   return (
     <div className="App">
       <header className="App-header">
@@ -61,7 +104,15 @@ function App() {
           <PatientDataDisplay patientData={patientData} />
         )}
 
-        {trials.length > 0 && (
+        {patientData && (
+          <SearchParametersPanel
+            patientData={patientData}
+            onRefineSearch={handleRefineSearch}
+            loading={refineLoading}
+          />
+        )}
+
+        {patientData && (
           <ResultsDisplay trials={trials} />
         )}
       </main>

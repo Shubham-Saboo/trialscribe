@@ -8,7 +8,7 @@ interface TranscriptInputProps {
 
 const SAMPLE_TRANSCRIPT = `Doctor: Good morning, Sarah. How are you feeling today?
 
-Patient: Hi Doctor. I've been experiencing some concerning symptoms over the past few months. I'm a 45-year-old woman living in San Francisco, California, and I've been having persistent headaches, especially in the morning, along with some vision problems.
+Patient: Hi Doctor. I've been experiencing some concerning symptoms over the past few months. I'm a 45-year-old woman living in San Francisco, and I've been having persistent headaches, especially in the morning, along with some vision problems.
 
 Doctor: I see. Can you tell me more about these headaches? When did they start?
 

@@ -49,3 +49,14 @@ export interface ClinicalTrial {
   url: string;
 }
 
+export interface ValidationField {
+  field: string;
+  label: string;
+  message: string;
+}
+
+export interface ValidationResult {
+  missing_fields: ValidationField[];
+  warnings: ValidationField[];
+}
+

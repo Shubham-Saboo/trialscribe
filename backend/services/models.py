@@ -126,3 +126,8 @@ class ExtractAndMatchResponse(BaseModel):
     trials: List[ClinicalTrial]
     transcript_length: int
 
+
+class SearchTrialsResponse(BaseModel):
+    """Response model for search-trials endpoint"""
+    trials: List[ClinicalTrial]
+

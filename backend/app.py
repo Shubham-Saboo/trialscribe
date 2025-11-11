@@ -6,7 +6,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from services.llm_extractor import extract_patient_data
 from services.trials_finder import find_clinical_trials
-from services.models import ExtractAndMatchResponse
+from services.models import ExtractAndMatchResponse, SearchTrialsResponse, PatientData
 from services.exceptions import (
     PatientDataExtractionError,
     ClinicalTrialsAPIError,
@@ -88,6 +88,71 @@ def extract_and_match():
     except PatientDataExtractionError as e:
         logger.error(f"Patient data extraction failed: {str(e)}")
         return jsonify({"error": str(e)}), 500
+    except ClinicalTrialsAPIError as e:
+        logger.error(f"Clinical trials API error: {str(e)}")
+        return jsonify({"error": str(e)}), 502
+    except TrialScribeException as e:
+        logger.error(f"Application error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+        return jsonify({"error": "An unexpected error occurred"}), 500
+
+
+@app.route('/api/search-trials', methods=['POST'])
+def search_trials():
+    """
+    Endpoint to search for clinical trials using PatientData directly.
+    Allows users to refine search parameters without re-extracting from transcript.
+    
+    Request Body:
+        {
+            "patient_data": {
+                "diagnosis": "glioblastoma",
+                "intervention": "temozolomide",
+                "location_city": "San Francisco",
+                "location_state": "California",
+                "status_preference": "RECRUITING,NOT_YET_RECRUITING",
+                ...
+            }
+        }
+    
+    Returns:
+        JSON response with matching clinical trials
+    """
+    try:
+        # Validate request
+        if not request.is_json:
+            raise InvalidInputError("Request must be JSON")
+        
+        data = request.get_json()
+        if not data:
+            raise InvalidInputError("Request body cannot be empty")
+        
+        patient_data_dict = data.get('patient_data')
+        if not patient_data_dict:
+            raise InvalidInputError("patient_data is required")
+        
+        logger.info(f"Processing search-trials request: diagnosis={patient_data_dict.get('diagnosis')}")
+        
+        # Validate and convert to PatientData model
+        try:
+            patient_data = PatientData.model_validate(patient_data_dict)
+        except Exception as e:
+            raise InvalidInputError(f"Invalid patient_data format: {str(e)}")
+        
+        # Find matching clinical trials
+        trials = find_clinical_trials(patient_data)
+        
+        # Create response using Pydantic model
+        response = SearchTrialsResponse(trials=trials)
+        
+        logger.info(f"Successfully processed search request: trials_found={len(trials)}")
+        return jsonify(response.model_dump()), 200
+        
+    except InvalidInputError as e:
+        logger.warning(f"Invalid input: {str(e)}")
+        return jsonify({"error": str(e)}), 400
     except ClinicalTrialsAPIError as e:
         logger.error(f"Clinical trials API error: {str(e)}")
         return jsonify({"error": str(e)}), 502

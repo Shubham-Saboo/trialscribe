@@ -67,18 +67,34 @@ def build_query_params(
         # Since we return only one location component, just use the first one
         params["query.locn"] = location_parts[0]
     
-    # Additional filters (Strategy 3: Only if include_additional_filters is True)
-    if include_additional_filters:
-        # filter.phase - Phase preference
-        if patient_data.phase_preference:
-            phase_str = ",".join(patient_data.phase_preference)
-            params["filter.phase"] = phase_str
+    # filter.advanced - Phase preference (Always include if set, regardless of strategy)
+    # Phase is a user preference and should be applied from the start
+    # API format: filter.advanced=AREA[Phase]PHASE1 (multiple phases: AREA[Phase]PHASE1+AREA[Phase]PHASE2)
+    if patient_data.phase_preference:
+        def convert_phase_format(phase: str) -> str:
+            """Convert phase format from 'Phase X' to 'PHASEX' for API"""
+            phase_upper = phase.upper().strip()
+            # Handle "Phase 1", "Phase 2", etc. -> "PHASE1", "PHASE2"
+            if phase_upper.startswith("PHASE"):
+                number = phase_upper.replace("PHASE", "").replace(" ", "").strip()
+                return f"PHASE{number}"
+            # Handle "Early Phase 1" -> "EARLY_PHASE1"
+            if "EARLY" in phase_upper and "PHASE" in phase_upper:
+                number = phase_upper.replace("EARLY", "").replace("PHASE", "").replace(" ", "").strip()
+                return f"EARLY_PHASE{number}"
+            # Fallback: replace spaces with underscores and uppercase
+            return phase_upper.replace(" ", "_")
         
-        # query.outc - Outcome (only if it's a valid medical outcome)
+        converted_phases = [convert_phase_format(p) for p in patient_data.phase_preference]
+        # Format: AREA[Phase]PHASE1+AREA[Phase]PHASE2 for multiple phases
+        phase_filters = [f"AREA[Phase]{phase}" for phase in converted_phases]
+        params["filter.advanced"] = "+".join(phase_filters)
+    
+    # Additional filters (Strategy 2: Only if include_additional_filters is True)
+    if include_additional_filters:
+        # query.outc - Outcome
         if patient_data.outcome:
-            outcome_clean = _clean_outcome(patient_data.outcome)
-            if outcome_clean:
-                params["query.outc"] = outcome_clean
+            params["query.outc"] = patient_data.outcome.strip()
         
         # query.spns - Sponsor
         if patient_data.sponsor:
@@ -146,36 +162,6 @@ def _clean_intervention(intervention: str) -> str:
     return intervention
 
 
-def _clean_outcome(outcome: str) -> str:
-    """
-    Clean outcome string - only return if it's a valid medical outcome
-    
-    Args:
-        outcome: Raw outcome string
-        
-    Returns:
-        Cleaned outcome string or empty string if not valid
-    """
-    # Remove personal/emotional outcomes that aren't medical endpoints
-    invalid_patterns = [
-        "to be there for",
-        "for my children",
-        "for my family",
-        "quality of life",
-        "feel better",
-    ]
-    
-    outcome_lower = outcome.lower()
-    for pattern in invalid_patterns:
-        if pattern in outcome_lower:
-            return ""  # Not a valid medical outcome
-    
-    # Clean the outcome
-    outcome = outcome.strip()
-    
-    return outcome
-
-
 def _build_location_query(patient_data: PatientData) -> List[str]:
     """
     Build location query from patient data.
@@ -216,9 +202,8 @@ def find_clinical_trials(patient_data: PatientData) -> List[ClinicalTrial]:
     Find matching clinical trials using ClinicalTrials.gov API
     
     Uses a progressive filtering strategy:
-    1. Strategy 1: status filter + condition filter (if diagnosis available)
-    2. Strategy 2: Add intervention filter if results > 50
-    3. Strategy 3: Add additional filters (phase, outcome, sponsor) if still > 50
+    1. Strategy 1: status filter + condition filter + location + intervention (if set) + phase (if set)
+    2. Strategy 2: Add additional filters (outcome, sponsor) if results > 50
     
     Args:
         patient_data: PatientData model instance
@@ -239,37 +224,27 @@ def find_clinical_trials(patient_data: PatientData) -> List[ClinicalTrial]:
     trials: List[ClinicalTrial] = []
     
     try:
-        # Strategy 1: status filter + condition filter + location (if available)
+        # Strategy 1: status filter + condition filter + location + intervention (if available)
+        # Include intervention from the start if it's set (user preference)
         params = build_query_params(
             patient_data,
-            include_intervention=False,
+            include_intervention=bool(patient_data.intervention),  # Include if set
             include_additional_filters=False
         )
         trials = _fetch_trials_from_api(params)
         
-        logger.info(f"Strategy 1: Found {len(trials)} trials (status + condition + location)")
+        logger.info(f"Strategy 1: Found {len(trials)} trials (status + condition + location + intervention)")
         
-        # Strategy 2: If results > 50, add intervention filter to narrow down
-        if len(trials) > 50 and patient_data.intervention:
-            logger.info(f"Strategy 1 returned {len(trials)} trials (>50), adding intervention filter")
-            params = build_query_params(
-                patient_data,
-                include_intervention=True,
-                include_additional_filters=False
-            )
-            trials = _fetch_trials_from_api(params)
-            logger.info(f"Strategy 2: Found {len(trials)} trials (added intervention)")
-        
-        # Strategy 3: If still > 50, add additional filters (phase, outcome, sponsor)
+        # Strategy 2: If still > 50, add additional filters (outcome, sponsor)
         if len(trials) > 50:
-            logger.info(f"Strategy 2 returned {len(trials)} trials (>50), adding additional filters")
+            logger.info(f"Strategy 1 returned {len(trials)} trials (>50), adding additional filters")
             params = build_query_params(
                 patient_data,
-                include_intervention=True,
+                include_intervention=bool(patient_data.intervention),
                 include_additional_filters=True
             )
             trials = _fetch_trials_from_api(params)
-            logger.info(f"Strategy 3: Found {len(trials)} trials (added additional filters)")
+            logger.info(f"Strategy 2: Found {len(trials)} trials (added additional filters)")
         
         logger.info(f"Returning {len(trials)} clinical trials")
         return trials
