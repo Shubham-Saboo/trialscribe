@@ -1,0 +1,120 @@
+.step-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--spacing-xl);
+  background: var(--color-white);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px var(--color-shadow);
+  margin-bottom: var(--spacing-xl);
+  border: 1px solid var(--color-border-light);
+  animation: fadeIn 0.4s ease;
+}
+
+.step-indicator-container {
+  display: flex;
+  align-items: center;
+}
+
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm);
+  border-radius: 8px;
+  transition: all var(--transition-fast);
+  min-width: 100px;
+  position: relative;
+}
+
+.step-item.clickable {
+  cursor: pointer;
+}
+
+.step-item.clickable:hover {
+  background-color: var(--color-background);
+}
+
+.step-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  background-color: var(--color-background);
+  color: var(--color-text-secondary);
+  transition: all var(--transition-fast);
+  border: 2px solid var(--color-border);
+}
+
+.step-item.active .step-icon {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px var(--color-shadow-hover);
+}
+
+.step-item.completed .step-icon {
+  background-color: var(--color-status-recruiting);
+  color: var(--color-white);
+  border-color: var(--color-status-recruiting);
+}
+
+.step-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  transition: all var(--transition-fast);
+}
+
+.step-item.active .step-label {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.step-item.completed .step-label {
+  color: var(--color-status-recruiting);
+  font-weight: 600;
+}
+
+.step-connector {
+  width: 60px;
+  height: 2px;
+  background-color: var(--color-border);
+  margin: 0 var(--spacing-sm);
+  transition: all var(--transition-fast);
+}
+
+.step-connector.completed {
+  background-color: var(--color-status-recruiting);
+}
+
+@media (max-width: 768px) {
+  .step-indicator {
+    padding: var(--spacing-md);
+    overflow-x: auto;
+  }
+
+  .step-item {
+    min-width: 80px;
+  }
+
+  .step-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .step-label {
+    font-size: 0.75rem;
+  }
+
+  .step-connector {
+    width: 40px;
+    margin: 0 var(--spacing-xs);
+  }
+}
+

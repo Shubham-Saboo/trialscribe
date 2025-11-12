@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import './App.css';
 import TranscriptInput from './components/TranscriptInput';
 import ResultsDisplay from './components/ResultsDisplay';
 import PatientDataDisplay from './components/PatientDataDisplay';
 import SearchParametersPanel from './components/SearchParametersPanel';
+import HeroSection from './components/HeroSection';
+import StepIndicator, { Step } from './components/StepIndicator';
+import EmptyState from './components/EmptyState';
 import { PatientData, ClinicalTrial } from './types';
 
 function App() {
@@ -87,6 +90,23 @@ function App() {
     }
   };
 
+  // Determine current step based on application state
+  const currentStep: Step = useMemo(() => {
+    if (trials.length > 0) return 'results';
+    if (patientData && originalPatientData) return 'search'; // Search panel is active
+    if (patientData) return 'patient'; // Patient data extracted, but not searching yet
+    return 'input';
+  }, [patientData, originalPatientData, trials]);
+
+  const handleStepClick = (step: Step) => {
+    // Allow navigation back to previous steps
+    // For now, we'll just scroll to the relevant section
+    // In a more advanced implementation, we could manage step state
+    if (step === 'input' && patientData) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="App">
       <header className="App-header">
@@ -95,6 +115,14 @@ function App() {
       </header>
 
       <main className="App-main">
+        {!patientData && !loading && (
+          <HeroSection />
+        )}
+
+        {patientData && (
+          <StepIndicator currentStep={currentStep} onStepClick={handleStepClick} />
+        )}
+
         <TranscriptInput onSubmit={handleSubmit} loading={loading} />
 
         {error && (
@@ -117,7 +145,13 @@ function App() {
         )}
 
         {patientData && (
-          <ResultsDisplay trials={trials} />
+          <>
+            {trials.length === 0 && !refineLoading ? (
+              <EmptyState type="no-results" />
+            ) : (
+              <ResultsDisplay trials={trials} />
+            )}
+          </>
         )}
       </main>
     </div>

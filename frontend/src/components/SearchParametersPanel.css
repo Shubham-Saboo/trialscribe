@@ -1,59 +1,69 @@
 .search-parameters-panel {
-  background: white;
+  background: var(--color-white);
   border-radius: 12px;
   padding: 0;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px var(--color-shadow);
+  margin-bottom: var(--spacing-xl);
+  animation: fadeIn 0.5s ease;
+  border: 1px solid var(--color-border-light);
+  overflow: hidden;
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.search-parameters-panel:hover {
+  box-shadow: 0 6px 30px var(--color-shadow);
 }
 
 .panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
+  padding: var(--spacing-lg);
   cursor: pointer;
-  border-bottom: 2px solid #e0e0e0;
-  transition: background-color 0.2s;
+  border-bottom: 2px solid var(--color-border);
+  transition: all var(--transition-fast);
+  background-color: var(--color-background-tint);
 }
 
 .panel-header:hover {
-  background-color: #f8f9fa;
+  background-color: var(--color-background);
 }
 
 .panel-header h3 {
   margin: 0;
-  color: #333;
+  color: var(--color-text-primary);
   font-size: 1.3rem;
-  font-weight: 600;
+  font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
 }
 
 .panel-icon {
   font-size: 0.9rem;
-  color: #667eea;
-  transition: transform 0.2s;
+  color: var(--color-primary);
+  transition: transform var(--transition-fast);
 }
 
 .unsaved-indicator {
-  background-color: #fff3cd;
-  color: #856404;
+  background-color: #FFF8E1;
+  color: #F57C00;
   padding: 0.3rem 0.8rem;
   border-radius: 15px;
   font-size: 0.85rem;
   font-weight: 500;
+  border: 1px solid #FFE082;
 }
 
 .parameters-form {
-  padding: 1.5rem;
+  padding: var(--spacing-lg);
 }
 
 .parameters-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
 }
 
 .parameter-group {
@@ -66,51 +76,59 @@
 }
 
 .parameter-label {
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 0.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
   font-size: 0.95rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
 }
 
 .parameter-label.read-only {
-  color: #666;
+  color: var(--color-text-secondary);
 }
 
 .info-icon {
   font-size: 0.85rem;
   cursor: help;
+  color: var(--color-primary);
 }
 
 .parameter-input,
 .parameter-select {
   padding: 0.75rem;
-  border: 2px solid #e0e0e0;
+  border: 2px solid var(--color-border);
   border-radius: 6px;
   font-size: 0.95rem;
-  transition: border-color 0.2s;
+  font-weight: 500;
+  transition: all var(--transition-fast);
   font-family: inherit;
+  background-color: var(--color-white);
+  color: var(--color-text-primary);
 }
 
 .parameter-input:focus,
 .parameter-select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(46, 125, 143, 0.15);
+  border-width: 2px;
 }
 
 .parameter-input.read-only {
-  background-color: #f5f5f5;
+  background-color: var(--color-background);
   cursor: not-allowed;
-  color: #666;
+  color: var(--color-text-secondary);
 }
 
 .parameter-hint {
-  margin-top: 0.5rem;
+  margin-top: var(--spacing-sm);
   font-size: 0.85rem;
-  color: #666;
+  color: var(--color-text-primary);
   font-style: italic;
+  font-weight: 400;
+  opacity: 0.75;
 }
 
 .location-fields {
@@ -122,24 +140,31 @@
 .phase-checkboxes {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  margin-top: 0.5rem;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-sm);
 }
 
 .checkbox-label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
   cursor: pointer;
   font-size: 0.9rem;
-  color: #555;
+  color: var(--color-text-primary);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: 6px;
+  transition: all var(--transition-fast);
+}
+
+.checkbox-label:hover {
+  background-color: var(--color-background);
 }
 
 .checkbox-label input[type="checkbox"] {
   width: 18px;
   height: 18px;
   cursor: pointer;
-  accent-color: #667eea;
+  accent-color: var(--color-primary);
 }
 
 .checkbox-label span {
@@ -149,38 +174,66 @@
 .form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e0e0e0;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--color-border);
 }
 
 .reset-button,
 .submit-button {
-  padding: 0.75rem 1.5rem;
-  border: none;
+  padding: 0;
+  border: 2px solid transparent;
   border-radius: 6px;
   font-size: 0.95rem;
   font-weight: 600;
+  font-family: inherit;
+  line-height: 1.5;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  width: 150px;
+  height: 42px;
+  box-sizing: border-box;
+  white-space: nowrap;
+  margin: 0;
+  text-align: center;
+  vertical-align: top;
 }
 
 .reset-button {
-  background-color: #f5f5f5;
-  color: #666;
-}
-
-.reset-button:hover:not(:disabled) {
-  background-color: #e0e0e0;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
 }
 
 .submit-button {
-  background-color: #667eea;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 6px rgba(46, 125, 143, 0.3);
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.reset-button:hover:not(:disabled) {
+  background-color: var(--color-border-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px var(--color-shadow);
 }
 
 .submit-button:hover:not(:disabled) {
-  background-color: #5568d3;
+  background-color: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--color-shadow-hover);
 }
 
 .reset-button:disabled,

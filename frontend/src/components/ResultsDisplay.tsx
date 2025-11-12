@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { FaFlask, FaDownload, FaChevronDown, FaChevronUp, FaExternalLinkAlt, FaCheckCircle, FaClock, FaTimesCircle, FaInfoCircle } from 'react-icons/fa';
 import './ResultsDisplay.css';
 import { ClinicalTrial } from '../types';
 
@@ -94,13 +95,9 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ trials }) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Empty state is handled by App.tsx, but we keep this for safety
   if (trials.length === 0) {
-    return (
-      <div className="results-container">
-        <h2>Clinical Trial Matches</h2>
-        <p className="no-results">No trials found. Please adjust your filtering criteria.</p>
-      </div>
-    );
+    return null;
   }
 
   const totalDisplayed = limitedTrials.length;
@@ -110,14 +107,19 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ trials }) => {
   return (
     <div className="results-container">
       <div className="results-header">
-        <h2>Clinical Trial Matches ({totalDisplayed}{trials.length > MAX_RESULTS ? ` of ${trials.length}` : ''})</h2>
+        <h2>
+          <FaFlask />
+          Clinical Trial Matches ({totalDisplayed}{trials.length > MAX_RESULTS ? ` of ${trials.length}` : ''})
+        </h2>
         {limitedTrials.length > 0 && (
           <div className="download-buttons">
             <button onClick={handleDownloadCSV} className="download-button" title="Download as CSV">
-              📥 CSV
+              <FaDownload />
+              CSV
             </button>
             <button onClick={handleDownloadJSON} className="download-button" title="Download as JSON">
-              📥 JSON
+              <FaDownload />
+              JSON
             </button>
           </div>
         )}
@@ -135,6 +137,10 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ trials }) => {
             <div className="trial-header">
               <h3 className="trial-title">{trial.title}</h3>
               <span className={`status-badge status-${trial.status.toLowerCase().replace(/\s+/g, '-').replace(/_/g, '-')}`}>
+                {trial.status === 'RECRUITING' && <FaCheckCircle />}
+                {trial.status === 'NOT_YET_RECRUITING' && <FaClock />}
+                {trial.status === 'ACTIVE_NOT_RECRUITING' && <FaTimesCircle />}
+                {trial.status === 'COMPLETED' && <FaInfoCircle />}
                 {trial.status}
               </span>
             </div>
@@ -204,7 +210,17 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ trials }) => {
                 className="expand-button"
                 onClick={() => toggleExpand(trial.nct_id)}
               >
-                {expandedId === trial.nct_id ? 'Show Less' : 'Show More Details'}
+                {expandedId === trial.nct_id ? (
+                  <>
+                    <FaChevronUp />
+                    Show Less
+                  </>
+                ) : (
+                  <>
+                    <FaChevronDown />
+                    Show More Details
+                  </>
+                )}
               </button>
             
             <a
@@ -213,7 +229,8 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ trials }) => {
               rel="noopener noreferrer"
               className="trial-link"
             >
-              View on ClinicalTrials.gov →
+              View on ClinicalTrials.gov
+              <FaExternalLinkAlt />
             </a>
             </div>
           </div>

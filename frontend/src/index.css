@@ -1,3 +1,44 @@
+:root {
+  /* Healthcare Color Palette - More Vibrant & Readable */
+  --color-primary: #2E7D8F;
+  --color-primary-dark: #1E5D6B;
+  --color-primary-light: #4A9DB5;
+  --color-secondary: #5FA88A;
+  --color-accent: #E67E5F;
+  --color-background: #F5F7FA;
+  --color-background-tint: #EBF0F5;
+  --color-text-primary: #1A1F2E;
+  --color-text-secondary: #4A5568;
+  --color-white: #FFFFFF;
+  
+  /* Status Colors - More Vibrant */
+  --color-status-recruiting: #48BB78;
+  --color-status-not-recruiting: #ED8936;
+  --color-status-active-not-recruiting: #F56565;
+  --color-status-completed: #4299E1;
+  
+  /* Neutral Colors */
+  --color-border: #CBD5E0;
+  --color-border-light: #E2E8F0;
+  --color-shadow: rgba(26, 31, 46, 0.12);
+  --color-shadow-hover: rgba(46, 125, 143, 0.25);
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  
+  /* Transitions */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  
+  /* Animations */
+  --animation-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -11,7 +52,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f5f7fa;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
 }
 
 code {

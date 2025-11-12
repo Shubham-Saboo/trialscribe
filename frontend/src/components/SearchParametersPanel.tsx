@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { FaFilter, FaExclamationCircle } from 'react-icons/fa';
 import './SearchParametersPanel.css';
 import { PatientData } from '../types';
 
@@ -147,9 +148,15 @@ const SearchParametersPanel: React.FC<SearchParametersPanelProps> = ({
       <div className="panel-header" onClick={() => setIsExpanded(!isExpanded)}>
         <h3>
           <span className="panel-icon">{isExpanded ? '▼' : '▶'}</span>
+          <FaFilter />
           Search Parameters
         </h3>
-        {hasChanges && <span className="unsaved-indicator">Unsaved changes</span>}
+        {hasChanges && (
+          <span className="unsaved-indicator">
+            <FaExclamationCircle />
+            Unsaved changes
+          </span>
+        )}
       </div>
 
       {isExpanded && (

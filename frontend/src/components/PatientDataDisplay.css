@@ -1,28 +1,47 @@
 .patient-data-container {
-  background: white;
+  background: var(--color-white);
   border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+  padding: var(--spacing-xl);
+  box-shadow: 0 4px 20px var(--color-shadow);
+  margin-bottom: var(--spacing-xl);
+  animation: fadeIn 0.5s ease;
+  border: 1px solid var(--color-border-light);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.patient-data-container:hover {
+  box-shadow: 0 6px 30px var(--color-shadow);
 }
 
 .patient-data-container h2 {
-  color: #333;
+  color: var(--color-text-primary);
   font-size: 1.5rem;
-  margin-bottom: 1.5rem;
-  font-weight: 600;
+  margin-bottom: var(--spacing-lg);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
 }
 
 .patient-data-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
+  gap: var(--spacing-md);
 }
 
 .data-item {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background-color: var(--color-background);
+  border-radius: 8px;
+  transition: all var(--transition-fast);
+}
+
+.data-item:hover {
+  background-color: var(--color-background-tint);
+  transform: translateY(-2px);
 }
 
 .data-item.full-width {
@@ -30,40 +49,52 @@
 }
 
 .data-label {
-  font-weight: 600;
-  color: #666;
+  font-weight: 700;
+  color: var(--color-text-primary);
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  opacity: 0.8;
 }
 
 .data-value {
-  color: #333;
+  color: var(--color-text-primary);
   font-size: 1rem;
+  font-weight: 600;
 }
 
 .data-value-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
 }
 
 .badge {
   display: inline-block;
   padding: 0.4rem 0.8rem;
-  background-color: #667eea;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--color-white);
   border-radius: 20px;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 4px rgba(46, 125, 143, 0.3);
+}
+
+.badge:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px var(--color-shadow-hover);
 }
 
 .badge.secondary {
-  background-color: #764ba2;
+  background-color: var(--color-secondary);
 }
 
 .badge.info {
-  background-color: #48bb78;
+  background-color: var(--color-status-recruiting);
 }
 
 @media (max-width: 768px) {
