@@ -64,8 +64,8 @@ def build_query_params(
     if location:
         params["query.locn"] = location
     
-    # filter.advanced - Phase and Gender preferences (Always include if set, regardless of strategy)
-    # API format: filter.advanced=AREA[Phase](PHASE1 OR PHASE2)+AREA[Sex]FEMALE
+    # filter.advanced - Phase, Gender, and Age preferences (Always include if set, regardless of strategy)
+    # API format: filter.advanced=AREA[Phase](PHASE1 OR PHASE2)+AREA[Sex]FEMALE+AREA[MinimumAge]RANGE[MIN, 45 years] AND AREA[MaximumAge]RANGE[45 years, MAX]
     advanced_filters = []
     
     # Phase filter
@@ -81,6 +81,12 @@ def build_query_params(
         if gender_upper in ["MALE", "FEMALE"]:
             advanced_filters.append(f"AREA[Sex]{gender_upper}")
         # Note: "Other" or "ALL" typically means no gender restriction, so we don't add a filter
+    
+    # Age filter
+    if patient_data.age is not None:
+        age_filter = _build_age_filter(patient_data.age)
+        if age_filter:
+            advanced_filters.append(age_filter)
     
     if advanced_filters:
         params["filter.advanced"] = "+".join(advanced_filters)
@@ -108,6 +114,26 @@ def _convert_phase_format(phase: str) -> str:
         number = phase_upper.replace("EARLY", "").replace("PHASE", "").replace(" ", "").strip()
         return f"EARLY_PHASE{number}"
     return phase_upper.replace(" ", "_")
+
+
+def _build_age_filter(patient_age: int) -> str:
+    """
+    Build age filter for ClinicalTrials.gov API using AREA[MinimumAge] and AREA[MaximumAge].
+    
+    Format: AREA[MinimumAge]RANGE[MIN, X years] AND AREA[MaximumAge]RANGE[X years, MAX]
+    
+    This ensures we find trials where:
+    - MinimumAge <= patient_age (trial accepts patients at least as young as patient)
+    - MaximumAge >= patient_age (trial accepts patients at least as old as patient)
+    
+    Args:
+        patient_age: Patient's age in years
+        
+    Returns:
+        Age filter string for filter.advanced parameter
+    """
+    # Format: AREA[MinimumAge]RANGE[MIN, X years] AND AREA[MaximumAge]RANGE[X years, MAX]
+    return f"AREA[MinimumAge]RANGE[MIN, {patient_age} years] AND AREA[MaximumAge]RANGE[{patient_age} years, MAX]"
 
 
 def _clean_intervention(intervention: str) -> str:
