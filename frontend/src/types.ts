@@ -2,11 +2,20 @@ export interface PatientData {
   // Condition/Disease
   diagnosis: string | null;
   
+  // Additional conditions/diagnoses
+  additional_conditions: string[];
+  
   // Intervention/Treatment
   intervention: string | null;
   
+  // Additional interventions/treatments
+  additional_interventions: string[];
+  
   // Search term
   search_term: string | null;
+  
+  // Custom search term (Essie expression syntax for refine search)
+  custom_search_term: string | null;
   
   // Location
   location_city: string | null;

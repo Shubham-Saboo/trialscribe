@@ -13,22 +13,46 @@ class PatientData(BaseModel):
     Fields are mapped to ClinicalTrials.gov API v2 query parameters.
     All fields default to None/null if not mentioned in the transcript.
     """
-    # query.cond - Condition/Disease
+    # query.cond - Condition/Disease (can be single or multiple)
     diagnosis: Optional[str] = Field(
         default=None,
-        description="Primary diagnosis or condition mentioned. Maps to query.cond parameter."
+        description="Primary diagnosis or condition mentioned. Maps to query.cond parameter. Can be comma-separated for multiple conditions."
     )
     
-    # query.intr - Intervention
+    # Additional conditions/diagnoses for complex queries
+    additional_conditions: List[str] = Field(
+        default_factory=list,
+        description="Additional conditions or diagnoses mentioned. Used to build complex condition queries with AND/OR operators."
+    )
+    
+    # query.intr - Intervention (can be single or multiple)
     intervention: Optional[str] = Field(
         default=None,
         description="Intervention, treatment, or therapy mentioned. Maps to query.intr parameter. Return null if no intervention is mentioned."
+    )
+    
+    # Additional interventions for complex queries
+    additional_interventions: List[str] = Field(
+        default_factory=list,
+        description="Additional interventions or treatments mentioned. Used to build complex intervention queries."
+    )
+    
+    # Keywords extracted from transcript for general search
+    keywords: List[str] = Field(
+        default_factory=list,
+        description="Relevant keywords or search terms extracted from the conversation. Used for query.term parameter with AND/OR operators."
     )
     
     # query.term - General search term
     search_term: Optional[str] = Field(
         default=None,
         description="General search term or keyword mentioned in the conversation. Maps to query.term parameter."
+    )
+    
+    # Custom search term (Essie expression syntax for refine search only)
+    custom_search_term: Optional[str] = Field(
+        default=None,
+        description="Custom search term using Essie expression syntax. Only used in refine search (query.term parameter). Supports AND, OR, parentheses, and quoted phrases."
     )
     
     # query.locn - Location

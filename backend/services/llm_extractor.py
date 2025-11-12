@@ -21,12 +21,15 @@ CRITICAL RULES:
 3. Return valid JSON matching the PatientData schema
 
 Fields to extract:
-- diagnosis: Disease/condition name (e.g., "glioblastoma", "Type 2 Diabetes")
-- intervention: Treatment/medication/therapy (e.g., "temozolomide", "immunotherapy")
+- diagnosis: Primary disease/condition name (e.g., "glioblastoma", "Type 2 Diabetes"). If multiple conditions mentioned, use the primary one here.
+- additional_conditions: Array of additional conditions/diseases mentioned (e.g., ["metastatic cancer", "brain tumor"]). Empty array if none.
+- intervention: Primary treatment/medication/therapy (e.g., "temozolomide", "immunotherapy"). If multiple mentioned, use the primary one here.
+- additional_interventions: Array of additional interventions/treatments mentioned (e.g., ["radiation therapy", "chemotherapy"]). Empty array if none.
+- keywords: Array of relevant medical keywords or search terms extracted from the conversation (e.g., ["biomarker", "targeted therapy", "precision medicine"]). These help refine search queries. Empty array if none.
 - location_city, location_state, location_country, location_zip: Patient location
 - age: Numeric age (integer or null)
 - gender: "Male", "Female", "Other", or null
-- symptoms: Array of symptom strings (empty array if none)
+- symptoms: Array of symptom strings (empty array if none). These can be used to enhance condition searches.
 - medical_history: Array of medical history items (empty array if none)
 - current_medications: Array of medications (empty array if none)
 - treatment_plan: Treatment plan string or null
@@ -35,7 +38,7 @@ Fields to extract:
 - sponsor: Sponsor organization string or null
 - phase_preference: Array of phase strings or null (e.g., ["Phase 1", "Phase 2"])
 - status_preference: Status string or null (e.g., "RECRUITING")
-- search_term: General search term string or null
+- search_term: General search term string or null (legacy field, prefer using keywords array)
 
 Return ONLY valid JSON, no markdown, no explanations."""
 
@@ -64,7 +67,7 @@ def extract_patient_data(transcript: str) -> PatientData:
         raise ValueError("Transcript cannot be empty")
     
     try:
-        logger.info(f"Starting patient data extraction from transcript ({len(transcript)} chars)")
+        logger.debug(f"Starting patient data extraction from transcript ({len(transcript)} chars)")
         
         # Create LLM client
         llm = create_llm_client()
@@ -85,7 +88,7 @@ def extract_patient_data(transcript: str) -> PatientData:
         logger.debug("Invoking LLM chain")
         extracted_dict = chain.invoke({"transcript": transcript})
         
-        logger.info(f"Extracted dict with keys: {list(extracted_dict.keys()) if isinstance(extracted_dict, dict) else 'not a dict'}")
+        logger.debug(f"Extracted dict with keys: {list(extracted_dict.keys()) if isinstance(extracted_dict, dict) else 'not a dict'}")
         
         # Validate and convert to PatientData
         if not isinstance(extracted_dict, dict):

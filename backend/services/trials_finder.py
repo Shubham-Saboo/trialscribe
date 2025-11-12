@@ -45,19 +45,31 @@ def build_query_params(
     else:
         params["filter.overallStatus"] = "RECRUITING,NOT_YET_RECRUITING"
     
-    # query.cond - Condition/Disease (Strategy 1: Always include if available)
-    # Use ONLY the diagnosis, no symptoms or extra terms
-    if patient_data.diagnosis:
-        # Take first part if comma-separated and strip whitespace
-        diagnosis_clean = patient_data.diagnosis.split(",")[0].strip()
-        if diagnosis_clean:
-            params["query.cond"] = diagnosis_clean
-    
-    # query.intr - Intervention (Strategy 2: Add if include_intervention is True)
-    if include_intervention and patient_data.intervention:
-        intervention_clean = _clean_intervention(patient_data.intervention)
-        if intervention_clean:
-            params["query.intr"] = intervention_clean
+    # Check if custom_search_term is provided - if so, use ONLY query.term and exclude query.cond/query.intr
+    if patient_data.custom_search_term and patient_data.custom_search_term.strip():
+        # Custom search mode: Use ONLY query.term with Essie expression syntax
+        # Do NOT include query.cond or query.intr when custom search is used
+        params["query.term"] = patient_data.custom_search_term.strip()
+        logger.debug(f"Custom search mode: Using ONLY query.term (Essie syntax): {patient_data.custom_search_term}")
+        logger.debug("Excluding query.cond and query.intr parameters in custom search mode")
+    else:
+        # Standard search mode: Build condition and intervention queries
+        # query.term is NOT set here - it will only be set via custom_search_term
+        # query.cond - Condition/Disease (Strategy 1: Always include if available)
+        # Build complex condition query using multiple conditions and symptoms
+        condition_query = _build_condition_query(patient_data)
+        if condition_query:
+            params["query.cond"] = condition_query
+        
+        # query.intr - Intervention (Strategy 2: Add if include_intervention is True)
+        # Build complex intervention query using multiple interventions
+        if include_intervention:
+            intervention_query = _build_intervention_query(patient_data)
+            if intervention_query:
+                params["query.intr"] = intervention_query
+        
+        # query.term is intentionally NOT set in standard mode
+        # It will only be set when custom_search_term is explicitly provided by the user
     
     # query.locn - Location (Always include if present)
     # Use only the most specific location (zip > city > state > country)
@@ -153,6 +165,151 @@ def _clean_intervention(intervention: str) -> str:
     return intervention.split(",")[0].strip()
 
 
+def _build_condition_query(patient_data: PatientData) -> str | None:
+    """
+    Build complex condition query using multiple conditions and symptoms.
+    
+    Combines:
+    - Primary diagnosis
+    - Additional conditions
+    - Relevant symptoms (if they're medical conditions)
+    
+    Uses OR operator to find trials matching any of the conditions.
+    Uses AND operator when combining with symptoms for more specific matches.
+    
+    Args:
+        patient_data: PatientData model instance
+        
+    Returns:
+        Condition query string or None
+    """
+    conditions = []
+    
+    # Add primary diagnosis
+    if patient_data.diagnosis:
+        diagnosis_clean = patient_data.diagnosis.split(",")[0].strip()
+        if diagnosis_clean:
+            conditions.append(diagnosis_clean)
+    
+    # Add additional conditions
+    if patient_data.additional_conditions:
+        for cond in patient_data.additional_conditions:
+            cond_clean = cond.strip()
+            if cond_clean and cond_clean not in conditions:
+                conditions.append(cond_clean)
+    
+    # Add relevant symptoms that might be conditions (e.g., "diabetes", "hypertension")
+    # Filter out generic symptoms like "pain", "fatigue"
+    medical_condition_symptoms = [
+        s.strip() for s in patient_data.symptoms 
+        if s.strip() and len(s.strip()) > 3  # Filter very short terms
+        and s.strip().lower() not in ["pain", "fatigue", "nausea", "vomiting", "fever", "headache"]
+    ]
+    
+    # Limit to top 3 most relevant symptoms to avoid overly broad queries
+    if medical_condition_symptoms:
+        conditions.extend(medical_condition_symptoms[:3])
+    
+    if not conditions:
+        return None
+    
+    # If single condition, return as-is
+    if len(conditions) == 1:
+        return conditions[0]
+    
+    # Multiple conditions: use OR operator
+    # Format: "condition1 OR condition2 OR condition3"
+    return " OR ".join(conditions)
+
+
+def _build_intervention_query(patient_data: PatientData) -> str | None:
+    """
+    Build complex intervention query using multiple interventions.
+    
+    Combines primary intervention with additional interventions using OR operator.
+    
+    Args:
+        patient_data: PatientData model instance
+        
+    Returns:
+        Intervention query string or None
+    """
+    interventions = []
+    
+    # Add primary intervention
+    if patient_data.intervention:
+        intervention_clean = _clean_intervention(patient_data.intervention)
+        if intervention_clean:
+            interventions.append(intervention_clean)
+    
+    # Add additional interventions
+    if patient_data.additional_interventions:
+        for intr in patient_data.additional_interventions:
+            intr_clean = _clean_intervention(intr)
+            if intr_clean and intr_clean not in interventions:
+                interventions.append(intr_clean)
+    
+    if not interventions:
+        return None
+    
+    # If single intervention, return as-is
+    if len(interventions) == 1:
+        return interventions[0]
+    
+    # Multiple interventions: use OR operator
+    # Format: "intervention1 OR intervention2"
+    return " OR ".join(interventions)
+
+
+def _build_keyword_query(patient_data: PatientData) -> str | None:
+    """
+    Build keyword query using extracted keywords.
+    
+    Uses AND operator to find trials matching all keywords (more specific).
+    Falls back to OR if too many keywords (broader search).
+    
+    Args:
+        patient_data: PatientData model instance
+        
+    Returns:
+        Keyword query string or None
+    """
+    keywords = []
+    
+    # Use keywords array if available
+    if patient_data.keywords:
+        keywords.extend([k.strip() for k in patient_data.keywords if k.strip()])
+    
+    # Fallback to search_term if no keywords
+    if not keywords and patient_data.search_term:
+        keywords.append(patient_data.search_term.strip())
+    
+    # Also consider relevant medical terms from treatment plan
+    if patient_data.treatment_plan and not keywords:
+        # Extract key medical terms (simplified - could be enhanced with NLP)
+        treatment_lower = patient_data.treatment_plan.lower()
+        medical_terms = []
+        for term in ["targeted", "precision", "biomarker", "genetic", "molecular", "immunotherapy"]:
+            if term in treatment_lower:
+                medical_terms.append(term)
+        keywords.extend(medical_terms[:2])  # Limit to 2 terms
+    
+    if not keywords:
+        return None
+    
+    # If single keyword, return as-is
+    if len(keywords) == 1:
+        return keywords[0]
+    
+    # Multiple keywords: use AND for specificity (2-3 keywords) or OR for broader search (4+)
+    if len(keywords) <= 3:
+        # AND operator: trials must match all keywords (more specific)
+        return " AND ".join(keywords)
+    else:
+        # OR operator: trials matching any keyword (broader search)
+        return " OR ".join(keywords[:5])  # Limit to 5 keywords
+
+
 def _get_most_specific_location(patient_data: PatientData) -> str | None:
     """
     Get the most specific location from patient data.
@@ -190,10 +347,13 @@ def find_clinical_trials(patient_data: PatientData) -> List[ClinicalTrial]:
     Raises:
         ClinicalTrialsAPIError: If API request fails
     """
-    logger.info(
+    logger.debug(
         f"Searching for clinical trials: "
         f"diagnosis={patient_data.diagnosis}, "
+        f"additional_conditions={patient_data.additional_conditions}, "
         f"intervention={patient_data.intervention}, "
+        f"additional_interventions={patient_data.additional_interventions}, "
+        f"keywords={patient_data.keywords}, "
         f"location={patient_data.location_city or patient_data.location_state}"
     )
     
@@ -209,20 +369,20 @@ def find_clinical_trials(patient_data: PatientData) -> List[ClinicalTrial]:
         )
         trials = _fetch_trials_from_api(params)
         
-        logger.info(f"Strategy 1: Found {len(trials)} trials (status + condition + location + intervention)")
+        logger.debug(f"Strategy 1: Found {len(trials)} trials (status + condition + location + intervention)")
         
         # Strategy 2: If still > 50, add additional filters (outcome, sponsor)
         if len(trials) > 50:
-            logger.info(f"Strategy 1 returned {len(trials)} trials (>50), adding additional filters")
+            logger.debug(f"Strategy 1 returned {len(trials)} trials (>50), adding additional filters")
             params = build_query_params(
                 patient_data,
                 include_intervention=bool(patient_data.intervention),
                 include_additional_filters=True
             )
             trials = _fetch_trials_from_api(params)
-            logger.info(f"Strategy 2: Found {len(trials)} trials (added additional filters)")
+            logger.debug(f"Strategy 2: Found {len(trials)} trials (added additional filters)")
         
-        logger.info(f"Returning {len(trials)} clinical trials")
+        logger.debug(f"Returning {len(trials)} clinical trials")
         return trials
         
     except ClinicalTrialsAPIError:

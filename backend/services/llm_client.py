@@ -35,7 +35,7 @@ def create_llm_client(
     model = model or Config.OPENAI_MODEL
     temperature = temperature if temperature is not None else Config.OPENAI_TEMPERATURE
     
-    logger.info(f"Creating LLM client with model: {model}, temperature: {temperature}")
+    logger.debug(f"Creating LLM client with model: {model}, temperature: {temperature}")
     
     return ChatOpenAI(
         model=model,

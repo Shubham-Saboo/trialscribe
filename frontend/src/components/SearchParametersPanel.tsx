@@ -38,7 +38,12 @@ const SearchParametersPanel: React.FC<SearchParametersPanelProps> = ({
   loading = false,
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
-  const [editedData, setEditedData] = useState<PatientData>(patientData);
+  const [editedData, setEditedData] = useState<PatientData>({
+    ...patientData,
+    additional_conditions: patientData.additional_conditions || [],
+    additional_interventions: patientData.additional_interventions || [],
+  });
+  const [customSearchTerm, setCustomSearchTerm] = useState<string>('');
 
   // Update edited data when patientData changes (only when diagnosis changes, indicating new search)
   const prevDiagnosisRef = useRef<string | null>(null);
@@ -48,7 +53,14 @@ const SearchParametersPanel: React.FC<SearchParametersPanelProps> = ({
                        prevDiagnosisRef.current !== patientData.diagnosis;
     
     if (isNewSearch) {
-      setEditedData(patientData);
+      // Ensure arrays are initialized
+      const normalizedData = {
+        ...patientData,
+        additional_conditions: patientData.additional_conditions || [],
+        additional_interventions: patientData.additional_interventions || [],
+      };
+      setEditedData(normalizedData);
+      setCustomSearchTerm(patientData.custom_search_term || '');
       prevDiagnosisRef.current = patientData.diagnosis;
     }
   }, [patientData]);
@@ -71,6 +83,30 @@ const SearchParametersPanel: React.FC<SearchParametersPanelProps> = ({
     setEditedData({
       ...editedData,
       intervention: value.trim() || null,
+    });
+  };
+
+  const handleAdditionalConditionsChange = (value: string) => {
+    // Parse comma-separated values
+    const conditions = value
+      .split(',')
+      .map(c => c.trim())
+      .filter(c => c.length > 0);
+    setEditedData({
+      ...editedData,
+      additional_conditions: conditions,
+    });
+  };
+
+  const handleAdditionalInterventionsChange = (value: string) => {
+    // Parse comma-separated values
+    const interventions = value
+      .split(',')
+      .map(i => i.trim())
+      .filter(i => i.length > 0);
+    setEditedData({
+      ...editedData,
+      additional_interventions: interventions,
     });
   };
 
@@ -109,11 +145,22 @@ const SearchParametersPanel: React.FC<SearchParametersPanelProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onRefineSearch(editedData);
+    // Include custom search term in the refined search
+    const refinedData = {
+      ...editedData,
+      custom_search_term: customSearchTerm.trim() || null,
+    };
+    onRefineSearch(refinedData);
   };
 
   const handleReset = () => {
-    setEditedData(originalPatientData);
+    const normalizedOriginal = {
+      ...originalPatientData,
+      additional_conditions: originalPatientData.additional_conditions || [],
+      additional_interventions: originalPatientData.additional_interventions || [],
+    };
+    setEditedData(normalizedOriginal);
+    setCustomSearchTerm(originalPatientData.custom_search_term || '');
     // Trigger API call with original parameters
     onRefineSearch(originalPatientData);
   };
@@ -132,16 +179,19 @@ const SearchParametersPanel: React.FC<SearchParametersPanelProps> = ({
 
     return (
       !compare(editedData.diagnosis, originalPatientData.diagnosis) ||
+      !compare(editedData.additional_conditions, originalPatientData.additional_conditions) ||
       !compare(editedData.intervention, originalPatientData.intervention) ||
+      !compare(editedData.additional_interventions, originalPatientData.additional_interventions) ||
       !compare(editedData.location_city, originalPatientData.location_city) ||
       !compare(editedData.location_state, originalPatientData.location_state) ||
       !compare(editedData.location_country, originalPatientData.location_country) ||
       !compare(editedData.location_zip, originalPatientData.location_zip) ||
       !compare(editedData.status_preference, originalPatientData.status_preference) ||
       !compare(editedData.phase_preference, originalPatientData.phase_preference) ||
-      !compare(editedData.gender, originalPatientData.gender)
+      !compare(editedData.gender, originalPatientData.gender) ||
+      !compare(customSearchTerm.trim() || null, originalPatientData.custom_search_term)
     );
-  }, [editedData, originalPatientData]);
+  }, [editedData, originalPatientData, customSearchTerm]);
 
   return (
     <div className="search-parameters-panel">
@@ -176,6 +226,26 @@ const SearchParametersPanel: React.FC<SearchParametersPanelProps> = ({
               />
             </div>
 
+            {/* Additional Conditions - Editable (only show if not empty) */}
+            {(editedData.additional_conditions && editedData.additional_conditions.length > 0) || 
+             (originalPatientData.additional_conditions && originalPatientData.additional_conditions.length > 0) ? (
+              <div className="parameter-group">
+                <label className="parameter-label">
+                  Additional Conditions
+                </label>
+                <input
+                  type="text"
+                  value={editedData.additional_conditions?.join(', ') || ''}
+                  onChange={(e) => handleAdditionalConditionsChange(e.target.value)}
+                  className="parameter-input"
+                  placeholder="e.g., metastatic cancer, brain tumor"
+                />
+                <p className="parameter-hint">
+                  Comma-separated list of additional conditions
+                </p>
+              </div>
+            ) : null}
+
             {/* Intervention - Editable */}
             <div className="parameter-group">
               <label className="parameter-label">Intervention/Treatment</label>
@@ -187,6 +257,26 @@ const SearchParametersPanel: React.FC<SearchParametersPanelProps> = ({
                 placeholder="e.g., temozolomide, immunotherapy"
               />
             </div>
+
+            {/* Additional Interventions - Editable (only show if not empty) */}
+            {(editedData.additional_interventions && editedData.additional_interventions.length > 0) || 
+             (originalPatientData.additional_interventions && originalPatientData.additional_interventions.length > 0) ? (
+              <div className="parameter-group">
+                <label className="parameter-label">
+                  Additional Interventions
+                </label>
+                <input
+                  type="text"
+                  value={editedData.additional_interventions?.join(', ') || ''}
+                  onChange={(e) => handleAdditionalInterventionsChange(e.target.value)}
+                  className="parameter-input"
+                  placeholder="e.g., radiation therapy, chemotherapy"
+                />
+                <p className="parameter-hint">
+                  Comma-separated list of additional treatments
+                </p>
+              </div>
+            ) : null}
 
             {/* Location Fields */}
             <div className="parameter-group full-width">
@@ -281,6 +371,43 @@ const SearchParametersPanel: React.FC<SearchParametersPanelProps> = ({
                   Selected: {editedData.phase_preference.join(', ')}
                 </p>
               )}
+            </div>
+
+            {/* Custom Search Term - Essie Expression Syntax */}
+            <div className="parameter-group full-width">
+              <label className="parameter-label">
+                Custom Search (Essie Expression Syntax)
+                <span className="info-icon" title="Use Essie expression syntax to combine keywords with AND/OR operators. Example: (biomarker AND targeted) OR precision">
+                  ℹ️
+                </span>
+              </label>
+              {customSearchTerm.trim() && (
+                <div className="custom-search-warning">
+                  <FaExclamationCircle />
+                  <span>
+                    <strong>Note:</strong> When using custom search, the Condition/Diagnosis and Intervention/Treatment fields above will be ignored. 
+                    Only your custom search expression will be used.
+                  </span>
+                </div>
+              )}
+              <textarea
+                value={customSearchTerm}
+                onChange={(e) => setCustomSearchTerm(e.target.value)}
+                className="parameter-input custom-search-input"
+                placeholder="e.g., (biomarker AND targeted) OR precision, biomarker AND (targeted OR immunotherapy)"
+                rows={3}
+              />
+              <p className="parameter-hint">
+                Use Essie expression syntax to combine keywords. Supports AND, OR, parentheses, and quoted phrases. 
+                <a 
+                  href="https://clinicaltrials.gov/find-studies/constructing-complex-search-queries" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ marginLeft: '4px', color: 'var(--color-primary)', textDecoration: 'underline' }}
+                >
+                  Learn more
+                </a>
+              </p>
             </div>
           </div>
 

@@ -80,7 +80,6 @@ def extract_and_match():
             transcript_length=len(transcript)
         )
         
-        logger.info(f"Successfully processed request: trials_found={len(trials)}")
         return jsonify(response.model_dump()), 200
         
     except InvalidInputError as e:
@@ -148,7 +147,6 @@ def search_trials():
         # Create response using Pydantic model
         response = SearchTrialsResponse(trials=trials)
         
-        logger.info(f"Successfully processed search request: trials_found={len(trials)}")
         return jsonify(response.model_dump()), 200
         
     except InvalidInputError as e:

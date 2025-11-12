@@ -135,6 +135,38 @@
   color: var(--color-text-secondary);
 }
 
+.custom-search-input {
+  resize: vertical;
+  min-height: 80px;
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.custom-search-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: #FFF8E1;
+  border: 1px solid #FFE082;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-sm);
+  color: #F57C00;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.custom-search-warning svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #F57C00;
+}
+
+.custom-search-warning strong {
+  font-weight: 600;
+}
+
 .parameter-hint {
   margin-top: var(--spacing-sm);
   font-size: 0.85rem;
