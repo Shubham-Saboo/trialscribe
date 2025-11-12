@@ -86,7 +86,12 @@ def build_query_params(
     if patient_data.age is not None:
         age_filter = _build_age_filter(patient_data.age)
         if age_filter:
-            advanced_filters.append(age_filter)
+            # Wrap age filter in parentheses when combining with other filters
+            # This prevents the API from misinterpreting the internal " AND " operator
+            if len(advanced_filters) > 0:
+                advanced_filters.append(f"({age_filter})")
+            else:
+                advanced_filters.append(age_filter)
     
     if advanced_filters:
         params["filter.advanced"] = "+".join(advanced_filters)

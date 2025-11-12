@@ -7,39 +7,35 @@ interface TranscriptInputProps {
   loading: boolean;
 }
 
-const SAMPLE_TRANSCRIPT = `Doctor: Good morning, Sarah. Please have a seat. How have you been feeling since your last visit?
+const SAMPLE_TRANSCRIPT = `Doctor: Good morning, Sarah. Please have a seat. I have your MRI results back, and I'd like to discuss them with you.
 
-Patient: Hi Doctor Johnson. Thank you for seeing me. Honestly, I've been pretty worried. I'm 45 years old, and I've been having these headaches that just won't go away. They started maybe three months ago, and they're getting worse.
+Patient: Hi Doctor Johnson. Thank you for seeing me. I'm 45 years old, and I've been so anxious waiting for these results. What did the MRI show?
 
-Doctor: I'm sorry to hear that. Can you describe the headaches for me? What do they feel like, and when do they typically occur?
+Doctor: I understand this has been a difficult wait. Let me be direct with you about the findings. Based on the MRI results, you are reported to have glioblastoma. This is a type of brain tumor that requires immediate treatment.
 
-Patient: They're really bad in the morning when I wake up - like a throbbing pain that makes it hard to get out of bed. They usually get a bit better as the day goes on, but they never completely go away. I've also been having trouble with my vision - things look blurry sometimes, especially when I'm reading or looking at a computer screen.
+Patient: Oh my god. Glioblastoma? I'm so scared. I have two young children at home. What does this mean?
 
-Doctor: Have you noticed any other symptoms? Any nausea, vomiting, or changes in your balance?
+Doctor: I know this is frightening news, and I want you to know that we're going to work together on this. Glioblastoma is a serious condition, but there are treatment options available. Your treatment plan will involve surgery to remove as much of the tumor as possible, followed by radiation therapy and chemotherapy.
 
-Patient: Yes, actually. I've felt nauseous a few times, especially in the morning. And... this is hard to say, but I think I might have had a seizure about a month ago. I was at work and I just kind of blanked out for a few seconds. My coworker said I looked confused and didn't respond when she called my name.
+Patient: What kind of chemotherapy? I live in San Francisco - can I get treatment here?
 
-Doctor: I see. Thank you for sharing that - I know it can be difficult to talk about. Based on what you're describing - the morning headaches, vision changes, nausea, and that episode you mentioned - I'm concerned we might be dealing with something in your brain. We need to get some imaging done to see what's going on. I'd like to order an MRI of your brain with contrast.
+Doctor: Absolutely, we can coordinate your treatment here in San Francisco. Your intervention or your treatment would be using temozolomide. This is a chemotherapy medication that's specifically used for glioblastoma and has shown effectiveness when combined with radiation therapy.
 
-Patient: Oh my god. Is it... could it be a tumor? I'm so scared. I have two young children at home.
+Patient: Temozolomide? I've never heard of that. How does it work?
 
-Doctor: I understand this is frightening, and I want to be honest with you. The symptoms you're describing could indicate a brain tumor, possibly a glioblastoma. But let's not jump to conclusions - we need the MRI results first to know for certain what we're dealing with. The good news is that we're catching this early, and there are treatment options available.
+Doctor: Temozolomide is an oral chemotherapy drug that works by damaging the DNA of cancer cells, which helps prevent the tumor from growing. It's typically taken daily during radiation treatment and then continued as maintenance therapy afterward. We'll monitor you closely throughout the treatment process.
 
-Patient: What kind of treatments? I live in San Francisco - can I get treatment here?
+Patient: What about side effects? Will I be able to work? I'm worried about how this will affect my family.
 
-Doctor: Absolutely. If the MRI confirms a glioblastoma, the standard approach is typically surgery to remove as much of the tumor as possible, followed by radiation therapy and chemotherapy. We'd likely use a medication called temozolomide. But I also want you to know that there are ongoing clinical trials for glioblastoma that might be options for you, particularly trials involving immunotherapy or targeted therapies that could be more effective than standard treatment alone.
+Doctor: That's completely understandable. The side effects can vary from person to person. Some patients experience fatigue, nausea, or changes in blood counts. We'll manage these as they come up, and we have medications to help with nausea and other symptoms. Many people are able to continue working, though you may need to adjust your schedule, especially during radiation. Your family is important, and we'll make sure you have the support you need.
 
-Patient: Clinical trials? Are those safe? I mean, I want to do whatever gives me the best chance, but I'm worried about being a guinea pig.
+Patient: Okay. So what happens next? When do we start treatment?
 
-Doctor: That's a very valid concern, and I'm glad you asked. Clinical trials are carefully regulated and monitored. They're often testing treatments that have shown promise in earlier studies. Many patients find that participating in a trial gives them access to cutting-edge treatments they might not otherwise have. We can discuss specific trials once we have your diagnosis confirmed, and I can help you understand the risks and benefits of each option.
-
-Patient: Okay. So what happens next? When can I get the MRI?
-
-Doctor: I'll have my office schedule it as soon as possible - ideally within the next few days. Once we have those results, we'll meet again to discuss the findings and create a treatment plan. In the meantime, if your symptoms get worse, especially if you have another seizure or severe headache, go to the emergency room immediately. Do you have any other questions right now?
+Doctor: We'll schedule your surgery as soon as possible - ideally within the next week. After surgery, once you've recovered, we'll begin radiation therapy and start you on temozolomide. The whole process will take several months, but we'll take it one step at a time. In the meantime, if your symptoms get worse, especially if you have another seizure or severe headache, go to the emergency room immediately. Do you have any other questions right now?
 
 Patient: I think that's all for now. Thank you for being so thorough and honest with me. I really appreciate it.
 
-Doctor: Of course. We're going to get through this together. My office will call you today to schedule the MRI, and we'll go from there. Take care, Sarah.`;
+Doctor: Of course. We're going to get through this together. My office will call you today to schedule the surgery, and we'll go from there. Take care, Sarah.`;
 
 const TranscriptInput: React.FC<TranscriptInputProps> = ({ onSubmit, loading }) => {
   const [transcript, setTranscript] = useState('');

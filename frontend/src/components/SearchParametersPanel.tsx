@@ -295,7 +295,7 @@ const SearchParametersPanel: React.FC<SearchParametersPanelProps> = ({
             </button>
             <button
               type="submit"
-              disabled={!hasChanges || loading}
+              disabled={loading}
               className="submit-button"
             >
               {loading ? 'Searching...' : 'Refine Search'}
