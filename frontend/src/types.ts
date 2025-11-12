@@ -50,14 +50,4 @@ export interface ClinicalTrial {
   raw_data?: any; // Full raw API response data for comprehensive chatbot context
 }
 
-export interface ValidationField {
-  field: string;
-  label: string;
-  message: string;
-}
-
-export interface ValidationResult {
-  missing_fields: ValidationField[];
-  warnings: ValidationField[];
-}
 

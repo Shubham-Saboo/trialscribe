@@ -26,7 +26,6 @@ class Config:
     CLINICAL_TRIALS_TIMEOUT: int = int(os.getenv("CLINICAL_TRIALS_TIMEOUT", "10"))
     
     # Search Configuration
-    MAX_QUERY_TERMS: int = 5
     MAX_LOCATIONS_PER_TRIAL: int = 5
     
     @classmethod

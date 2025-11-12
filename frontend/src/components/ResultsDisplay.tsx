@@ -1,18 +1,26 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { FaFlask, FaDownload, FaChevronDown, FaChevronUp, FaExternalLinkAlt, FaCheckCircle, FaClock, FaTimesCircle, FaInfoCircle } from 'react-icons/fa';
+import { FaFlask, FaDownload, FaChevronDown, FaChevronUp, FaExternalLinkAlt, FaCheckCircle, FaClock, FaTimesCircle, FaInfoCircle, FaStar } from 'react-icons/fa';
 import './ResultsDisplay.css';
 import { ClinicalTrial } from '../types';
 import TrialChatbot from './TrialChatbot';
 
 interface ResultsDisplayProps {
   trials: ClinicalTrial[];
+  showBookmarks?: boolean; // If true, show bookmark buttons
+  toggleFavorite?: (trial: ClinicalTrial) => void;
+  isFavorite?: (nctId: string) => boolean;
 }
 
 const RESULTS_PER_PAGE = 5;
 const MAX_PAGES = 10;
 const MAX_RESULTS = RESULTS_PER_PAGE * MAX_PAGES; // 50
 
-const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ trials }) => {
+const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ 
+  trials, 
+  showBookmarks = false,
+  toggleFavorite,
+  isFavorite
+}) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [chatbotTrial, setChatbotTrial] = useState<ClinicalTrial | null>(null);
@@ -138,13 +146,28 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ trials }) => {
           <div key={trial.nct_id} className="trial-card">
             <div className="trial-header">
               <h3 className="trial-title">{trial.title}</h3>
-              <span className={`status-badge status-${trial.status.toLowerCase().replace(/\s+/g, '-').replace(/_/g, '-')}`}>
-                {trial.status === 'RECRUITING' && <FaCheckCircle />}
-                {trial.status === 'NOT_YET_RECRUITING' && <FaClock />}
-                {trial.status === 'ACTIVE_NOT_RECRUITING' && <FaTimesCircle />}
-                {trial.status === 'COMPLETED' && <FaInfoCircle />}
-                {trial.status}
-              </span>
+              <div className="trial-header-actions">
+                {showBookmarks && toggleFavorite && isFavorite && (
+                  <button
+                    className={`bookmark-button ${isFavorite(trial.nct_id) ? 'bookmarked' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite(trial);
+                    }}
+                    title={isFavorite(trial.nct_id) ? 'Remove from favorites' : 'Add to favorites'}
+                    aria-label={isFavorite(trial.nct_id) ? 'Remove from favorites' : 'Add to favorites'}
+                  >
+                    <FaStar />
+                  </button>
+                )}
+                <span className={`status-badge status-${trial.status.toLowerCase().replace(/\s+/g, '-').replace(/_/g, '-')}`}>
+                  {trial.status === 'RECRUITING' && <FaCheckCircle />}
+                  {trial.status === 'NOT_YET_RECRUITING' && <FaClock />}
+                  {trial.status === 'ACTIVE_NOT_RECRUITING' && <FaTimesCircle />}
+                  {trial.status === 'COMPLETED' && <FaInfoCircle />}
+                  {trial.status}
+                </span>
+              </div>
             </div>
             
             <div className="trial-meta">
