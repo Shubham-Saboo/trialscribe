@@ -242,9 +242,28 @@ const SearchParametersPanel: React.FC<SearchParametersPanelProps> = ({
               </select>
             </div>
 
+            {/* Gender Preference - Editable */}
+            <div className="parameter-group">
+              <label className="parameter-label">Gender</label>
+              <select
+                value={editedData.gender || ''}
+                onChange={(e) => handleGenderChange(e.target.value)}
+                className="parameter-select"
+              >
+                {GENDER_OPTIONS.map((option) => (
+                  <option key={option.value || 'all'} value={option.value || ''}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <p className="parameter-hint">
+                Filter trials by gender eligibility requirements
+              </p>
+            </div>
+
             {/* Phase Preference - Editable */}
             <div className="parameter-group full-width">
-              <label className="parameter-label">Trial Phase (Optional)</label>
+              <label className="parameter-label">Trial Phase</label>
               <div className="phase-checkboxes">
                 {PHASE_OPTIONS.map((phase) => (
                   <label key={phase} className="checkbox-label">
@@ -262,25 +281,6 @@ const SearchParametersPanel: React.FC<SearchParametersPanelProps> = ({
                   Selected: {editedData.phase_preference.join(', ')}
                 </p>
               )}
-            </div>
-
-            {/* Gender Preference - Editable */}
-            <div className="parameter-group">
-              <label className="parameter-label">Gender (Optional)</label>
-              <select
-                value={editedData.gender || ''}
-                onChange={(e) => handleGenderChange(e.target.value)}
-                className="parameter-select"
-              >
-                {GENDER_OPTIONS.map((option) => (
-                  <option key={option.value || 'all'} value={option.value || ''}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <p className="parameter-hint">
-                Filter trials by gender eligibility requirements
-              </p>
             </div>
           </div>
 
