@@ -47,6 +47,7 @@ export interface ClinicalTrial {
   eligibility_criteria: string;
   locations: string[];
   url: string;
+  raw_data?: any; // Full raw API response data for comprehensive chatbot context
 }
 
 export interface ValidationField {

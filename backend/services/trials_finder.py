@@ -35,6 +35,7 @@ def build_query_params(
     params: Dict[str, str] = {
         "format": "json",
         "pageSize": 50,  # Request 50 to check if we need to narrow down
+        "sort": "@relevance",  # Sort results by relevance
     }
     
     # filter.overallStatus - Always include status filter
@@ -301,7 +302,8 @@ def _parse_study(study: Dict) -> ClinicalTrial | None:
             summary=description.get("briefSummary"),
             eligibility_criteria=eligibility.get("eligibilityCriteria"),
             locations=_extract_locations(protocol.get("contactsLocationsModule", {})),
-            url=f"https://clinicaltrials.gov/study/{nct_id}"
+            url=f"https://clinicaltrials.gov/study/{nct_id}",
+            raw_data=study  # Store the full raw API response
         )
     except Exception as e:
         logger.warning(f"Failed to parse study: {str(e)}")

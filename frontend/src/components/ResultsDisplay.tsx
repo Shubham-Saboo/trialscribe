@@ -193,17 +193,6 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ trials }) => {
                     <div className="eligibility-text">{trial.eligibility_criteria}</div>
                   </div>
                 )}
-                
-                {trial.locations.length > 0 && (
-                  <div className="detail-section">
-                    <strong>Locations:</strong>
-                    <ul className="locations-list">
-                      {trial.locations.map((location, idx) => (
-                        <li key={idx}>{location}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
               </div>
             )}
             

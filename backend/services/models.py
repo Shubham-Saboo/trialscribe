@@ -3,7 +3,7 @@ Pydantic models for TrialScribe application
 Mapped to ClinicalTrials.gov API v2 query parameters
 Reference: https://clinicaltrials.gov/data-api/api
 """
-from typing import Optional, List
+from typing import Optional, List, Dict
 from pydantic import BaseModel, Field
 
 
@@ -118,6 +118,7 @@ class ClinicalTrial(BaseModel):
     eligibility_criteria: Optional[str] = Field(default=None, description="Eligibility criteria")
     locations: List[str] = Field(default_factory=list, description="Trial locations")
     url: str = Field(description="URL to the trial on ClinicalTrials.gov")
+    raw_data: Optional[Dict] = Field(default=None, description="Full raw API response data for this trial")
 
 
 class ExtractAndMatchResponse(BaseModel):
