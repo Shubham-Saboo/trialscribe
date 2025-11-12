@@ -6,7 +6,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from services.llm_extractor import extract_patient_data
 from services.trials_finder import find_clinical_trials
-from services.models import ExtractAndMatchResponse, SearchTrialsResponse, PatientData
+from services.trial_chatbot import chat_about_trial
+from services.models import ExtractAndMatchResponse, SearchTrialsResponse, PatientData, ClinicalTrial
 from services.exceptions import (
     PatientDataExtractionError,
     ClinicalTrialsAPIError,
@@ -158,6 +159,73 @@ def search_trials():
         return jsonify({"error": str(e)}), 502
     except TrialScribeException as e:
         logger.error(f"Application error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+        return jsonify({"error": "An unexpected error occurred"}), 500
+
+
+@app.route('/api/trial-chat', methods=['POST'])
+def trial_chat():
+    """
+    Endpoint for Q&A chatbot about a specific clinical trial.
+    
+    Request Body:
+        {
+            "nct_id": "NCT12345678",
+            "question": "What are the eligibility requirements?",
+            "chat_history": [
+                {"role": "user", "content": "What is this trial about?"},
+                {"role": "assistant", "content": "This trial is about..."}
+            ],
+            "trial": {
+                // Full ClinicalTrial object
+            }
+        }
+    
+    Returns:
+        JSON response with AI answer
+    """
+    try:
+        # Validate request
+        if not request.is_json:
+            raise InvalidInputError("Request must be JSON")
+        
+        data = request.get_json()
+        if not data:
+            raise InvalidInputError("Request body cannot be empty")
+        
+        question = data.get('question')
+        if not question:
+            raise InvalidInputError("Question is required")
+        
+        trial_dict = data.get('trial')
+        if not trial_dict:
+            raise InvalidInputError("Trial information is required")
+        
+        # Validate and convert to ClinicalTrial model
+        try:
+            trial = ClinicalTrial.model_validate(trial_dict)
+        except Exception as e:
+            raise InvalidInputError(f"Invalid trial format: {str(e)}")
+        
+        chat_history = data.get('chat_history', [])
+        
+        logger.info(f"Processing trial chat: nct_id={trial.nct_id}, question_length={len(question)}")
+        
+        # Get AI response using existing LLM client
+        answer = chat_about_trial(trial, question, chat_history)
+        
+        return jsonify({
+            "answer": answer,
+            "nct_id": trial.nct_id
+        }), 200
+        
+    except InvalidInputError as e:
+        logger.warning(f"Invalid input: {str(e)}")
+        return jsonify({"error": str(e)}), 400
+    except TrialScribeException as e:
+        logger.error(f"Trial chat error: {str(e)}")
         return jsonify({"error": str(e)}), 500
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}", exc_info=True)

@@ -28,5 +28,9 @@ declare module 'react-icons/fa' {
   export const FaList: FC<SVGProps<SVGSVGElement>>;
   export const FaMap: FC<SVGProps<SVGSVGElement>>;
   export const FaGlobe: FC<SVGProps<SVGSVGElement>>;
+  export const FaComment: FC<SVGProps<SVGSVGElement>>;
+  export const FaTimes: FC<SVGProps<SVGSVGElement>>;
+  export const FaPaperPlane: FC<SVGProps<SVGSVGElement>>;
+  export const FaRobot: FC<SVGProps<SVGSVGElement>>;
 }
 

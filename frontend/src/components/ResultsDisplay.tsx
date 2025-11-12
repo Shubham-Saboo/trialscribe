@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { FaFlask, FaDownload, FaChevronDown, FaChevronUp, FaExternalLinkAlt, FaCheckCircle, FaClock, FaTimesCircle, FaInfoCircle } from 'react-icons/fa';
 import './ResultsDisplay.css';
 import { ClinicalTrial } from '../types';
+import TrialChatbot from './TrialChatbot';
 
 interface ResultsDisplayProps {
   trials: ClinicalTrial[];
@@ -14,6 +15,7 @@ const MAX_RESULTS = RESULTS_PER_PAGE * MAX_PAGES; // 50
 const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ trials }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [chatbotTrial, setChatbotTrial] = useState<ClinicalTrial | null>(null);
 
   // Limit trials to max 50 (10 pages × 5 per page)
   const limitedTrials = useMemo(() => {
@@ -222,6 +224,14 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ trials }) => {
                   </>
                 )}
               </button>
+
+              <button
+                className="chat-button"
+                onClick={() => setChatbotTrial(trial)}
+                title="Chat about this trial"
+              >
+                💬 Ask Questions
+              </button>
             
             <a
               href={trial.url}
@@ -291,6 +301,14 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ trials }) => {
             </button>
           </div>
         </div>
+      )}
+
+      {chatbotTrial && (
+        <TrialChatbot
+          trial={chatbotTrial}
+          isOpen={!!chatbotTrial}
+          onClose={() => setChatbotTrial(null)}
+        />
       )}
     </div>
   );
