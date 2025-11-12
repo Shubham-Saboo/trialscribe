@@ -8,6 +8,7 @@ import SearchParametersPanel from './SearchParametersPanel';
 import EmptyState from './EmptyState';
 import { PatientData, ClinicalTrial } from '../types';
 import { useFavorites } from '../hooks/useFavorites';
+import { API_ENDPOINTS } from '../config';
 import '../App.css';
 
 type TabType = 'search' | 'favorites';
@@ -30,7 +31,7 @@ const Application: React.FC = () => {
     setTrials([]);
 
     try {
-      const response = await fetch('/api/extract-and-match', {
+      const response = await fetch(API_ENDPOINTS.EXTRACT_AND_MATCH, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -59,7 +60,7 @@ const Application: React.FC = () => {
     setError(null);
 
     try {
-      const response = await fetch('/api/search-trials', {
+      const response = await fetch(API_ENDPOINTS.SEARCH_TRIALS, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

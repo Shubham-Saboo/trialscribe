@@ -29,12 +29,34 @@ This application solves the challenge of connecting patients with relevant clini
 
 ## Deployment
 
-**Live Demo**: [Deploy your application to Render/Vercel/AWS and add the link here]
+TrialScribe is production-ready and can be deployed using Docker or directly to cloud platforms.
 
-### Quick Deploy Options
+### Quick Deploy with Docker
 
-- **Backend (Flask)**: Deploy to [Render](https://render.com) or [Heroku](https://heroku.com)
-- **Frontend (React)**: Deploy to [Vercel](https://vercel.com) or [Netlify](https://netlify.com)
+```bash
+# Clone the repository
+git clone https://github.com/your-username/trialscribe.git
+cd trialscribe
+
+# Create .env file with your OpenAI API key
+echo "OPENAI_API_KEY=your_key_here" > .env
+
+# Start with Docker Compose
+docker-compose up -d
+```
+
+The application will be available at:
+- Frontend: http://localhost
+- Backend API: http://localhost:5001
+
+### Deployment Options
+
+- **Docker Compose**: Full stack deployment (recommended for VPS/cloud servers)
+- **Render.com**: Backend + Frontend (see [DEPLOYMENT.md](DEPLOYMENT.md))
+- **Vercel**: Frontend deployment
+- **AWS/GCP/Azure**: Container-based deployment
+
+For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## Local Setup
 
@@ -155,7 +177,7 @@ trialscribe/
 
 4. **Data Extraction**: The LLM extracts structured data using Pydantic models for type safety and validation. Only extracts explicitly mentioned information to avoid hallucinations.
 
-5. **Frontend Proxy**: Uses React's proxy configuration for development. For production, update API endpoints to point to your deployed backend URL.
+5. **Frontend Proxy**: Uses React's proxy configuration for development. For production, set `REACT_APP_API_URL` environment variable or use Docker with build args.
 
 ## Areas of Focus & Craftsmanship
 

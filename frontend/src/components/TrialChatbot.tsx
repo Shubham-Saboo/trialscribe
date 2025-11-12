@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FaTimes, FaPaperPlane, FaRobot, FaUser } from 'react-icons/fa';
 import './TrialChatbot.css';
 import { ClinicalTrial } from '../types';
+import { API_ENDPOINTS } from '../config';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -70,7 +71,7 @@ const TrialChatbot: React.FC<TrialChatbotProps> = ({ trial, isOpen, onClose }) =
     setLoading(true);
 
     try {
-      const response = await fetch('/api/trial-chat', {
+      const response = await fetch(API_ENDPOINTS.TRIAL_CHAT, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

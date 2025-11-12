@@ -72,6 +72,7 @@
 }
 
 .transcript-textarea {
+  margin-bottom: 2rem;
   width: 100%;
   padding: var(--spacing-lg);
   border: 2px solid var(--color-border);
@@ -103,7 +104,7 @@
 }
 
 .submit-button {
-  margin-top: 2.5rem;
+  margin-top: 4rem;
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
   color: var(--color-white);
   border: none;
