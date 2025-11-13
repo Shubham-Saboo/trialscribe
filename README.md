@@ -85,9 +85,3 @@ Frontend (React) ← Display Results ← Backend API
 - 💬 AI chatbot for individual trial Q&A
 - ⭐ Favorites management
 - 🔧 Search parameter refinement
-
-## 🔗 Links
-
-- **Live Demo:** [Frontend](https://trialscribe-frontend-z2qrei6gjq-uc.a.run.app) | [Backend Health](https://trialscribe-backend-urywxjb4aa-uc.a.run.app/health)
-- **Deployment:** Google Cloud Run (serverless containers)
-- **APIs:** OpenAI GPT-4o-mini, ClinicalTrials.gov API v2
