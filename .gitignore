@@ -47,3 +47,11 @@ dist/
 # Docker
 .docker/
 docker-compose.override.yml
+
+# Deployment scripts with sensitive data
+deploy-cloud-run.sh
+
+# Cloud deployment configs (not needed for local development)
+backend/cloudbuild.yaml
+frontend/cloudbuild.yaml
+docker-compose.prod.yml

@@ -1,219 +1,93 @@
-# TrialScribe - Clinical Trial Matcher
+# TrialScribe - AI-Powered Clinical Trial Matcher
 
-TrialScribe is a full-stack web application that extracts patient information from doctor-patient conversation transcripts using AI and matches them with relevant clinical trials from ClinicalTrials.gov.
+**Live Demo:** [https://trialscribe-frontend-z2qrei6gjq-uc.a.run.app](https://trialscribe-frontend-z2qrei6gjq-uc.a.run.app)
 
-## Overview
+TrialScribe automatically extracts patient information from doctor-patient transcripts and matches them with relevant clinical trials from ClinicalTrials.gov using AI.
 
-This application solves the challenge of connecting patients with relevant clinical trials by:
+## 🎯 Approach
 
-1. **Processing Transcripts**: Accepts patient-doctor conversation transcripts
-2. **AI-Powered Extraction**: Uses LangChain with OpenAI's GPT-4 to extract structured patient data (diagnosis, demographics, symptoms, medical history, etc.)
-3. **Trial Matching**: Queries the ClinicalTrials.gov API to find relevant, currently recruiting trials
-4. **Intuitive Display**: Presents results in a clean, user-friendly interface with expandable trial details
+**Three-Stage Pipeline:**
+1. **AI Extraction** → LangChain + GPT-4o-mini extracts structured patient data (diagnosis, demographics, symptoms, location)
+2. **Smart Query Building** → Constructs optimized ClinicalTrials.gov API queries with progressive filtering
+3. **Intelligent Matching** → Returns relevant, currently recruiting trials with detailed eligibility criteria
 
-## Tech Stack
+**Tech Stack:** Flask (Python) + React (TypeScript) + LangChain + OpenAI API + ClinicalTrials.gov API v2
 
-- **Backend**: Python 3.9+, Flask, LangChain, OpenAI API
-- **Frontend**: TypeScript, React, CSS3
-- **APIs**: ClinicalTrials.gov API v2, OpenAI API
-
-## Features
-
-- ✨ Clean, modern UI with responsive design
-- 🤖 Intelligent patient data extraction using GPT-4
-- 🔍 Smart clinical trial matching based on extracted criteria
-- 📋 Detailed trial information with eligibility criteria
-- 🔗 Direct links to ClinicalTrials.gov for each trial
-- 💾 Sample transcript for quick testing
-- ⚡ Fast, efficient API calls with error handling
-
-## Deployment
-
-TrialScribe is production-ready and can be deployed using Docker or directly to cloud platforms.
-
-### Quick Deploy with Docker
-
-```bash
-# Clone the repository
-git clone https://github.com/your-username/trialscribe.git
-cd trialscribe
-
-# Create .env file with your OpenAI API key
-echo "OPENAI_API_KEY=your_key_here" > .env
-
-# Start with Docker Compose
-docker-compose up -d
-```
-
-The application will be available at:
-- Frontend: http://localhost
-- Backend API: http://localhost:5001
-
-### Deployment Options
-
-- **Docker Compose**: Full stack deployment (recommended for VPS/cloud servers)
-- **Render.com**: Backend + Frontend (see [DEPLOYMENT.md](DEPLOYMENT.md))
-- **Vercel**: Frontend deployment
-- **AWS/GCP/Azure**: Container-based deployment
-
-For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
-
-## Local Setup
+## 🚀 Quick Start with Docker
 
 ### Prerequisites
+- [Docker](https://www.docker.com/get-started) installed
+- [OpenAI API Key](https://platform.openai.com/api-keys)
 
-- Python 3.9 or higher
-- `uv` package manager ([Installation guide](https://github.com/astral-sh/uv))
-- Node.js 16+ and npm
-- OpenAI API key ([Get one here](https://platform.openai.com/api-keys))
+### Setup & Run
 
-### Backend Setup
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/your-username/trialscribe.git
+   cd trialscribe
+   ```
 
-1. Install `uv` (if not already installed):
+2. **Create environment file:**
+   ```bash
+   echo "OPENAI_API_KEY=your_openai_api_key_here" > .env
+   ```
+
+3. **Start the application:**
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Access the application:**
+   - **Frontend:** http://localhost
+   - **Backend API:** http://localhost:5001
+
+That's it! The application is now running. Visit `http://localhost` and use the sample transcript to test it.
+
+### Useful Commands
+
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-# Or with Homebrew: brew install uv
+# View logs
+docker-compose logs -f
+
+# Stop the application
+docker-compose stop
+
+# Stop and remove containers
+docker-compose down
+
+# Rebuild after code changes
+docker-compose up -d --build
 ```
 
-2. Navigate to the backend directory:
-```bash
-cd backend
-```
+## 📋 Key Assumptions
 
-3. Create a virtual environment and install dependencies with `uv`:
-```bash
-uv venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-uv pip install -r requirements.txt
-```
+1. **GPT-4o-mini** provides sufficient accuracy for medical extraction (cost-effective)
+2. **Only explicit information** is extracted (prevents hallucinations)
+3. **Recruiting/Not Yet Recruiting** trials are most relevant (default filter)
+4. **Most specific location** yields better results (ZIP > City > State > Country)
+5. **Progressive filtering** balances comprehensiveness with relevance (>50 results triggers additional filters)
+6. **Graceful error handling** provides better UX than technical errors
+7. **Search refinement** allows iterative improvement without re-entering transcripts
 
-Alternatively, you can use `uv` to sync dependencies directly:
-```bash
-uv sync
-```
-
-4. Create a `.env` file in the `backend` directory:
-```bash
-cp env.example .env
-```
-
-5. Edit `.env` and add your OpenAI API key:
-```
-OPENAI_API_KEY=your_openai_api_key_here
-PORT=5001
-```
-
-6. Run the Flask server:
-```bash
-python app.py
-```
-
-The backend will run on `http://localhost:5001`
-
-### Frontend Setup
-
-1. Navigate to the frontend directory:
-```bash
-cd frontend
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Update the API endpoint in `src/App.tsx` if your backend is running on a different URL (the default proxy is set to `http://localhost:5001` in `package.json`)
-
-4. Start the development server:
-```bash
-npm start
-```
-
-The frontend will run on `http://localhost:3000` and automatically open in your browser.
-
-## Usage
-
-1. **Enter Transcript**: Paste a patient-doctor conversation transcript into the text area, or click "Use Sample Transcript" to load a pre-generated example.
-
-2. **Process**: Click "Find Clinical Trials" to extract patient data and search for matching trials.
-
-3. **Review Results**: 
-   - View extracted patient information (diagnosis, demographics, symptoms, etc.)
-   - Browse matching clinical trials
-   - Click "Show More Details" to see eligibility criteria, locations, and full summaries
-   - Click "View on ClinicalTrials.gov" to see the official trial page
-
-## Project Structure
+## 🏗️ Architecture
 
 ```
-trialscribe/
-├── backend/
-│   ├── app.py                 # Flask application entry point
-│   ├── services/
-│   │   ├── llm_extractor.py  # LangChain-based patient data extraction
-│   │   └── trials_finder.py  # ClinicalTrials.gov API integration
-│   ├── requirements.txt       # Python dependencies
-│   └── .env.example          # Environment variables template
-├── frontend/
-│   ├── src/
-│   │   ├── App.tsx           # Main React component
-│   │   ├── components/       # React components
-│   │   │   ├── TranscriptInput.tsx
-│   │   │   ├── PatientDataDisplay.tsx
-│   │   │   └── ResultsDisplay.tsx
-│   │   └── types.ts          # TypeScript type definitions
-│   ├── package.json          # Node.js dependencies
-│   └── tsconfig.json         # TypeScript configuration
-└── README.md                  # This file
+Backend (Flask) → LangChain → OpenAI API → Extract Patient Data
+                                      ↓
+                              ClinicalTrials.gov API → Match Trials
+                                      ↓
+Frontend (React) ← Display Results ← Backend API
 ```
 
-## Assumptions & Design Decisions
+## ✨ Features I'm proud of:
 
-1. **LLM Model**: Using GPT-4o-mini for cost-effectiveness while maintaining good extraction quality. Can be easily upgraded to GPT-4 for better accuracy.
+- 🔍 Advanced query building with Essie expression syntax
+- 💬 AI chatbot for individual trial Q&A
+- ⭐ Favorites management
+- 🔧 Search parameter refinement
 
-2. **Trial Filtering**: Currently filters for "RECRUITING" status trials and limits results to 10 for performance. The query prioritizes diagnosis/condition matching.
+## 🔗 Links
 
-3. **Error Handling**: Graceful fallbacks if LLM extraction fails or API calls timeout. User-friendly error messages displayed in the UI.
-
-4. **Data Extraction**: The LLM extracts structured data using Pydantic models for type safety and validation. Only extracts explicitly mentioned information to avoid hallucinations.
-
-5. **Frontend Proxy**: Uses React's proxy configuration for development. For production, set `REACT_APP_API_URL` environment variable or use Docker with build args.
-
-## Areas of Focus & Craftsmanship
-
-### 1. **Robust LLM Integration with Structured Output**
-I paid close attention to creating a reliable, type-safe extraction pipeline using LangChain and Pydantic. The system uses structured output parsing to ensure consistent data extraction, with proper error handling and fallbacks. The prompt engineering was carefully crafted to extract only explicitly mentioned information, reducing the risk of hallucinations.
-
-### 2. **User Experience & Interface Design**
-The UI was designed with a focus on clarity and usability. Features include:
-- Clean, modern gradient design that's easy on the eyes
-- Expandable trial cards to reduce information overload
-- Color-coded status badges for quick trial status identification
-- Responsive design that works on mobile and desktop
-- Loading states and error messages for better user feedback
-- Sample transcript feature for quick testing
-
-### 3. **API Integration & Error Handling**
-The ClinicalTrials.gov API integration includes:
-- Robust query parameter building based on extracted patient data
-- Proper handling of API rate limits and timeouts
-- Data transformation to present only relevant information
-- Fallback mechanisms if the API is unavailable
-- Efficient data extraction from nested API responses
-
-## Future Enhancements
-
-- **Trial Ranking**: Use AI to rank trials by relevance to the patient's specific condition
-- **Patient Profile Saving**: Allow users to save patient profiles for future reference
-- **Trial Comparison**: Side-by-side comparison of multiple trials
-- **AI Q&A**: Chat interface to ask questions about specific trials
-- **Email Notifications**: Notify patients when new relevant trials become available
-- **Advanced Filtering**: Filter by location, phase, study type, etc.
-
-## License
-
-This project is created for the DeepScribe Product Engineer Coding Challenge.
-
-## Contact
-
-For questions or issues, please open an issue in the repository.
+- **Live Demo:** [Frontend](https://trialscribe-frontend-z2qrei6gjq-uc.a.run.app) | [Backend Health](https://trialscribe-backend-urywxjb4aa-uc.a.run.app/health)
+- **Deployment:** Google Cloud Run (serverless containers)
+- **APIs:** OpenAI GPT-4o-mini, ClinicalTrials.gov API v2
